@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PastaPass — How fast can you click "BUY"?</title>
+<meta name="description" content="A latency benchmark of three drop-sniper architectures — raw HTTP, real-browser automation, and a hybrid — measured against a mock drop site on a single monotonic clock." />
+<meta property="og:title" content="PastaPass — a drop-sniper latency benchmark" />
+<meta property="og:description" content="Three automation strategies race to hit BUY the instant a mock product drops. Measured on one clock, in nanoseconds." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%9D%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="#top"><span class="brand-mark">🍝</span> PastaPass</a>
+  <nav class="nav-links">
+    <a href="#results">Results</a>
+    <a href="#approaches">Approaches</a>
+    <a href="#method">Method</a>
+    <a href="#stack">Stack</a>
+    <a class="ext" href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- HERO ------------------------------------------------------------------>
+  <section class="hero">
+    <span class="badge">Latency benchmark · nanosecond-scored</span>
+    <h1>How fast can you click <span class="accent">“BUY”</span>?</h1>
+    <p class="lead">
+      Limited drops sell out in the milliseconds after they go live. <strong>PastaPass</strong> pits
+      three automation strategies against a mock drop site and measures — on a single monotonic
+      clock — exactly how long each takes to react and fire the purchase.
+    </p>
+
+    <div class="headline" id="headline" hidden>
+      <div class="headline-num"><span id="headline-value">—</span><span class="unit">ms</span></div>
+      <div class="headline-label">
+        fastest median (p50)<br /><span id="headline-approach" class="muted">—</span>
+      </div>
+    </div>
+
+    <div class="cta">
+      <a class="btn btn-primary" href="#results">See the numbers ↓</a>
+      <a class="btn btn-ghost" href="https://github.com/" target="_blank" rel="noopener">Read the code ↗</a>
+    </div>
+  </section>
+
+  <!-- RESULTS ---------------------------------------------------------------->
+  <section id="results" class="panel">
+    <div class="panel-head">
+      <h2>Measured release&nbsp;→&nbsp;hit latency</h2>
+      <p class="sub">
+        Every approach ultimately calls the same <code>/buy</code> endpoint, so the server can stamp
+        the drop and the hit from one clock and compare them directly. Lower is faster. Dot = median,
+        line reaches the 95th percentile.
+      </p>
+    </div>
+
+    <div id="sample-ribbon" class="ribbon" hidden>
+      Showing illustrative sample data — it’s replaced automatically once real runs are uploaded.
+    </div>
+
+    <div id="chart" class="chart" aria-label="Latency by approach" role="img"></div>
+
+    <div class="table-wrap">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>Approach</th><th>Lang</th><th class="num">n</th>
+            <th class="num">min</th><th class="num">p50</th><th class="num">p95</th>
+            <th class="num">max</th><th class="num">mean</th>
+          </tr>
+        </thead>
+        <tbody><!-- filled by app.js --></tbody>
+      </table>
+      <p class="axis-note">All figures in milliseconds. <span id="results-meta" class="muted"></span></p>
+    </div>
+
+    <p class="fineprint">
+      On loopback this isolates pure code/strategy overhead; real network round-trip (tens of ms)
+      dominates on a deployed target. The ranking between strategies holds either way.
+    </p>
+  </section>
+
+  <!-- APPROACHES ------------------------------------------------------------->
+  <section id="approaches" class="panel">
+    <div class="panel-head">
+      <h2>Three ways to be first</h2>
+      <p class="sub">Speed goes up, robustness goes down, complexity goes up — pick your poison.</p>
+    </div>
+
+    <div class="cards">
+      <article class="card">
+        <div class="card-tag" data-approach="browser-observer">A</div>
+        <h3>Real browser + MutationObserver</h3>
+        <p>
+          A genuine Chromium (Playwright) loads the page like a human — real cookies, real JS,
+          real session. It watches the DOM and clicks the BUY button the microsecond it appears.
+        </p>
+        <ul>
+          <li><strong>Slowest</strong> — a whole browser sits in the path</li>
+          <li><strong>Most realistic</strong> — indistinguishable from a person</li>
+          <li>Runs anywhere: a laptop or a cheap VPS</li>
+        </ul>
+      </article>
+
+      <article class="card featured">
+        <div class="card-tag" data-approach="http-direct">B</div>
+        <h3>HTTP-direct + pre-warmed socket</h3>
+        <p>
+          No browser at all. It parks a long-poll on the “is it live?” endpoint and holds a warm
+          keep-alive socket, then fires the raw <code>/buy</code> request the instant the signal lands.
+        </p>
+        <ul>
+          <li><strong>Fastest by far</strong> — just bytes on a wire</li>
+          <li>Brittle — you must reverse-engineer the exact request</li>
+          <li>Best on a VPS in the target’s region</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <div class="card-tag" data-approach="browser-hybrid">C</div>
+        <h3>Hybrid — warm browser, injected fetch</h3>
+        <p>
+          Keeps a real, logged-in browser for the session and anti-bot cover, but skips the rendered
+          click — it fires the underlying request straight from in-page JavaScript.
+        </p>
+        <ul>
+          <li><strong>Near-B speed</strong> with A’s legitimacy</li>
+          <li>The pragmatic sweet spot</li>
+          <li>Needs a real session to shine</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- METHOD ----------------------------------------------------------------->
+  <section id="method" class="panel">
+    <div class="panel-head">
+      <h2>Why the number is trustworthy</h2>
+      <p class="sub">The hard part of a benchmark like this isn’t the bots — it’s the clock.</p>
+    </div>
+
+    <div class="method-grid">
+      <div class="method-copy">
+        <p>
+          Comparing a timestamp taken on the bot’s machine to one taken on the server is meaningless
+          at microsecond scale — the two clocks aren’t synchronized. So the mock server is the
+          <strong>single clock of record</strong>:
+        </p>
+        <ul>
+          <li>it stamps <code>t_release</code> the instant it makes the button live,</li>
+          <li>it stamps <code>t_hit</code> the instant the <code>/buy</code> request lands,</li>
+          <li>and reports <code>t_hit − t_release</code> — both from the same monotonic counter.</li>
+        </ul>
+        <p>
+          The release moment is <strong>jittered and never revealed</strong> to the bot, so a strategy
+          has to genuinely react to the signal rather than predict the clock. One process, one counter,
+          zero cross-machine sync error.
+        </p>
+      </div>
+      <pre class="code"><code><span class="c">// inside the mock server — one monotonic clock</span>
+<span class="k">const</span> tHit = process.hrtime.<span class="fn">bigint</span>();  <span class="c">// stamp FIRST</span>
+<span class="k">if</span> (state !== RELEASED) <span class="k">return</span> tooEarly();
+<span class="k">const</span> latency = tHit - tRelease;    <span class="c">// nanoseconds</span>
+<span class="c">// every approach races the same endpoint,</span>
+<span class="c">// so this number is directly comparable.</span></code></pre>
+    </div>
+  </section>
+
+  <!-- STACK ------------------------------------------------------------------>
+  <section id="stack" class="panel">
+    <div class="panel-head">
+      <h2>How this site is built</h2>
+      <p class="sub">A small, honest full-stack slice — all on Cloudflare’s free tier.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-step"><span class="flow-k">Bots</span><span class="flow-v">Python · Node · Go race a mock drop</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-k">Uploader</span><span class="flow-v">Python posts CSV rows to the API</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-k">Pages Function</span><span class="flow-v">token-guarded ingest &amp; read API</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-k">D1</span><span class="flow-v">edge SQLite stores every trial</span></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step"><span class="flow-k">This page</span><span class="flow-v">reads aggregates, renders live</span></div>
+    </div>
+    <p class="fineprint">
+      Writes are private (bearer-token); the dashboard is read-only. Percentiles are computed the same
+      way in the API and the local aggregator, so the site and the terminal never disagree.
+    </p>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Built as a systems/latency study. No real product, no real payment — the target is a local mock.</span>
+  <a href="https://github.com/" target="_blank" rel="noopener">Source on GitHub ↗</a>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

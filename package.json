@@ -1,0 +1,16 @@
+{
+  "name": "pastapass",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Latency benchmark of three drop-sniper architectures — public dashboard on Cloudflare Pages + D1.",
+  "scripts": {
+    "dev": "wrangler pages dev web",
+    "deploy": "wrangler pages deploy web",
+    "db:create": "wrangler d1 create pastapass",
+    "db:schema": "wrangler d1 execute pastapass --remote --file=./schema.sql",
+    "db:schema:local": "wrangler d1 execute pastapass --local --file=./schema.sql"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

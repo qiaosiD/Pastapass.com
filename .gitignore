@@ -5,6 +5,11 @@ __pycache__/
 .venv/
 venv/
 
+# cloudflare / wrangler
+.wrangler/
+.dev.vars
+.mf/
+
 # benchmark output (regenerated on every run)
 benchmark/results/*.csv
 

@@ -1,0 +1,16 @@
+# Cloudflare Pages + Functions + D1 config.
+#
+# `pages_build_output_dir` makes this a Pages project whose static assets live in web/.
+# The functions/ directory (sibling of web/) is auto-detected and file-routed:
+#   functions/api/results.js -> GET/POST /api/results
+#   functions/api/ingest.js  -> POST     /api/ingest
+# The [[d1_databases]] binding below is exposed to those functions as `env.DB`.
+
+name = "pastapass"
+compatibility_date = "2024-11-06"
+pages_build_output_dir = "web"
+
+[[d1_databases]]
+binding = "DB"                 # -> context.env.DB inside functions
+database_name = "pastapass"
+database_id = "REPLACE_WITH_YOUR_D1_ID"   # printed by `wrangler d1 create pastapass`

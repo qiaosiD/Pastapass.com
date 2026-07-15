@@ -1,0 +1,13 @@
+{
+  "sample": true,
+  "updated_at": null,
+  "total_measurements": 110,
+  "total_runs": 5,
+  "groups": [
+    { "key": "http-direct|go",           "approach": "http-direct",      "lang": "go",     "n": 30, "min_ms": 0.061, "p50_ms": 0.089, "p95_ms": 0.152, "max_ms": 0.31,  "mean_ms": 0.098 },
+    { "key": "http-direct|node",         "approach": "http-direct",      "lang": "node",   "n": 30, "min_ms": 0.118, "p50_ms": 0.176, "p95_ms": 0.286, "max_ms": 0.44,  "mean_ms": 0.191 },
+    { "key": "http-direct|python",       "approach": "http-direct",      "lang": "python", "n": 30, "min_ms": 0.223, "p50_ms": 0.341, "p95_ms": 0.583, "max_ms": 0.912, "mean_ms": 0.372 },
+    { "key": "browser-hybrid|python",    "approach": "browser-hybrid",   "lang": "python", "n": 10, "min_ms": 1.82,  "p50_ms": 2.51,  "p95_ms": 3.94,  "max_ms": 4.73,  "mean_ms": 2.68 },
+    { "key": "browser-observer|python",  "approach": "browser-observer", "lang": "python", "n": 10, "min_ms": 4.21,  "p50_ms": 6.12,  "p95_ms": 9.37,  "max_ms": 11.24, "mean_ms": 6.53 }
+  ]
+}
