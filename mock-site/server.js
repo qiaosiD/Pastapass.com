@@ -36,6 +36,7 @@ let state = STATE.IDLE;
 let tRelease = null;          // bigint ns, set exactly at the drop
 let releaseTimer = null;
 let meta = { approach: null, trial: null };
+let launchWallMs = null;      // absolute wall-clock (Date.now) launch, mirrors real /api/server-time
 
 const pendingLongpolls = new Set(); // res objects held open until release (HTTP bots)
 const sseClients = new Set();       // res objects for Server-Sent Events (browser bots)
@@ -47,6 +48,7 @@ const nowNs = () => process.hrtime.bigint();
 function resetToIdle() {
   state = STATE.IDLE;
   tRelease = null;
+  launchWallMs = null;
   if (releaseTimer) { clearTimeout(releaseTimer); releaseTimer = null; }
 }
 
@@ -110,8 +112,8 @@ const server = http.createServer(async (req, res) => {
 
   if (method === 'OPTIONS') { res.writeHead(204, jsonHeaders()); return res.end(); }
 
-  // -------- /buy : the thing every approach races to hit --------------------
-  if (p === '/buy') {
+  // -------- /buy (and /api/enter alias) : the thing every approach races to hit
+  if (p === '/buy' || p === '/api/enter') {
     const tHit = nowNs();                       // stamp FIRST
     if (state !== STATE.RELEASED || tRelease === null) {
       return sendJson(res, 409, { ok: false, error: 'not-released' }); // fired too early
@@ -170,9 +172,10 @@ const server = http.createServer(async (req, res) => {
     meta = { approach: body.approach ?? null, trial: body.trial ?? null };
     const base = Number(body.baseDelayMs ?? 200);
     const jitter = Number(body.jitterMs ?? 300);
-    const delay = base + Math.random() * jitter;   // hidden from the bot
+    const delay = base + Math.random() * jitter;   // hidden from long-poll/SSE bots
+    launchWallMs = Date.now() + delay;             // but revealed via /api/server-time
     releaseTimer = setTimeout(doRelease, delay);
-    return sendJson(res, 200, { ok: true, state });
+    return sendJson(res, 200, { ok: true, state, launch: launchWallMs });
   }
 
   // -------- /control/reset --------------------------------------------------
@@ -188,6 +191,15 @@ const server = http.createServer(async (req, res) => {
   if (p === '/results/last') return sendJson(res, 200, lastResult || {});
   if (p === '/results') return sendJson(res, 200, results);
   if (p === '/health') return sendJson(res, 200, { ok: true });
+
+  // -------- /api/server-time : mirrors the real target for clock-sync practice ----
+  if (p === '/api/server-time') {
+    return sendJson(res, 200, {
+      is_live: state === STATE.RELEASED,
+      launch: launchWallMs,      // absolute wall-clock ms, or null if not armed
+      now: Date.now(),
+    });
+  }
 
   // -------- static page -----------------------------------------------------
   if (p === '/' || p === '/index.html') {
