@@ -23,10 +23,11 @@
   #slot { margin-top:26px; min-height:60px; display:flex; justify-content:center; align-items:center; }
   #buy { appearance:none; border:0; cursor:pointer; font-size:20px; font-weight:800; letter-spacing:.02em;
          color:#fff; background:linear-gradient(180deg,#ef5b4c,#c9372a); padding:18px 40px; border-radius:14px;
-         box-shadow:0 12px 30px rgba(224,72,58,.45); animation:pop .18s ease-out; }
+         box-shadow:0 12px 30px rgba(224,72,58,.45); animation:pop .18s ease-out, illuminate 1.1s ease-in-out infinite; }
   #buy:active { transform:translateY(1px); }
   .waiting { color:var(--muted); font-size:14px; }
   @keyframes pop { from { transform:scale(.9); opacity:0 } to { transform:scale(1); opacity:1 } }
+  @keyframes illuminate { 0%,100% { box-shadow:0 12px 30px rgba(224,72,58,.45) } 50% { box-shadow:0 12px 30px rgba(224,72,58,.45), 0 0 28px 4px rgba(244,201,93,.85) } }
   .foot { margin-top:24px; font-size:11px; color:#5b6472; }
 </style>
 </head>
@@ -65,7 +66,7 @@ const slot = document.getElementById('slot');
 
 async function fireBuy(approach) {
   const t = performance.now();
-  const res = await fetch(`/buy?approach=${encodeURIComponent(approach)}&trial=${trial}`);
+  const res = await fetch(`/api/enter?approach=${encodeURIComponent(approach)}&trial=${trial}`);
   const data = await res.json();
   window.__lastBuy = Object.assign({}, data, { client_fire_ms: performance.now() - t });
   if (data.ok) {
@@ -90,7 +91,8 @@ es.addEventListener('release', () => {
     slot.innerHTML = '';
     const btn = document.createElement('button');
     btn.id = 'buy';
-    btn.textContent = 'CLICK HERE TO BUY';
+    btn.className = 'buy-now';
+    btn.textContent = 'Buy Now';   // the real target's button is literally named "Buy Now"
     btn.addEventListener('click', () => {
       window.__t_click = performance.now();
       fireBuy('browser-click');

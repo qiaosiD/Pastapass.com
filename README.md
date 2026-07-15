@@ -88,6 +88,33 @@ Server-measured **release → hit**, milliseconds, fastest first:
 
 ---
 
+## How the real Pasta Pass drop works (recon)
+
+Reconstructed from Olive Garden's own on-page copy + the site's JS bundles (`launchConfig.js`,
+`waitingRoom.js`). The marketing site is static (S3 + CloudFront); the drop is API-driven:
+
+| Fact | Detail | Source |
+|---|---|---|
+| **Button name** | **"Buy Now"** — *illuminates* at 2 pm ET. "No need to refresh, just click as fast as you can!" | on-page copy |
+| **What the button does** | clicking "Buy Now" → **`POST /api/enter`** (`credentials: include`, `no-store`) | `launchConfig.js` |
+| **Launch** | **2026-07-16 14:00:00 ET**; `is_live` flips via `/api/server-time` | `/api/server-time` |
+| **Quantity** | **10,000 passes**, first-come ("a pass will be added to your cart") | on-page copy |
+| **Routing** | `/api/enter` → `/waiting.html` (queue) · checkout · `/sold-out.html` | `launchConfig.js` |
+| **Live signals** | `/api/sse` stream emits `sold_out`; `/sold-out.flag` polled `no-store` → redirect on 200 | `index.js` / `waitingRoom.js` |
+| **Checkout** | **8 minutes**, **credit/debit only** — no Apple Pay / Google Pay / PayPal | on-page copy |
+| **Sold out** | "all the passes have been claimed" message | on-page copy |
+
+**Implication for the bot:** the "Buy Now" button *is* `POST /api/enter`. Approach **B/C** fire
+`/api/enter` directly and never need the button's DOM selector; only Approach **A** (a real click)
+needs it — and it's styled text that only exists once live, so capture it from DevTools at 2 pm.
+"No need to refresh" confirms the button illuminates via the `/api/sse` push — so **the refresh
+loop from the original plan is the wrong move**; hold the connection and react to the signal.
+
+The mock mirrors this: the injected button is now named **"Buy Now"** and clicking it fires
+`/api/enter` (alias of `/buy`), same as the real target.
+
+---
+
 ## Knowing exactly when the drop fires — clock sync
 
 The real target exposes `GET /api/server-time` → `{is_live, launch, now}`. You **cannot** trust
