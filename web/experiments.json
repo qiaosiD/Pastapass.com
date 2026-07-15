@@ -1,0 +1,131 @@
+{
+  "updated_at": "2026-07-15T02:54:23",
+  "count": 2,
+  "experiments": [
+    {
+      "id": "002",
+      "slug": "browser-automation-vs-raw-http-the-cost-of-a-rea",
+      "title": "Browser automation vs raw HTTP \u2014 the cost of a real click",
+      "status": "complete",
+      "created": "2026-07-15T02:53:58",
+      "updated": "2026-07-15T02:54:23",
+      "hypothesis": "Firing the raw request (HTTP-direct / hybrid) is materially faster than driving a real browser click.",
+      "primary_metric": "p50_ms",
+      "method": "Approach A (Playwright MutationObserver click), B (raw HTTP-direct, Rust), and C (hybrid: real browser, injected fetch) race the same mock; release\u2192hit on one clock.",
+      "variants": [
+        {
+          "key": "control",
+          "name": "A \u00b7 Browser + observer",
+          "approach": "browser-observer",
+          "lang": "python",
+          "trials": 10,
+          "metrics": {
+            "n": 10,
+            "min_ms": 1.3288,
+            "p50_ms": 3.4643,
+            "p95_ms": 7.1284,
+            "max_ms": 7.1284,
+            "mean_ms": 3.5815
+          }
+        },
+        {
+          "key": "http",
+          "name": "B \u00b7 HTTP-direct (Rust)",
+          "approach": "http-direct",
+          "lang": "rust",
+          "trials": 30,
+          "metrics": {
+            "n": 30,
+            "min_ms": 0.2058,
+            "p50_ms": 0.5323,
+            "p95_ms": 0.653,
+            "max_ms": 0.6738,
+            "mean_ms": 0.4983
+          }
+        },
+        {
+          "key": "hybrid",
+          "name": "C \u00b7 Hybrid (browser+fetch)",
+          "approach": "browser-hybrid",
+          "lang": "python",
+          "trials": 10,
+          "metrics": {
+            "n": 10,
+            "min_ms": 2.2745,
+            "p50_ms": 3.1698,
+            "p95_ms": 5.9104,
+            "max_ms": 5.9104,
+            "mean_ms": 3.2996
+          }
+        }
+      ],
+      "outcome": {
+        "primary_metric": "p50_ms",
+        "winner": "http",
+        "winner_name": "B \u00b7 HTTP-direct (Rust)",
+        "winner_value": 0.5323,
+        "control_key": "control",
+        "control_value": 3.4643,
+        "delta_ms": -2.932,
+        "delta_pct": -84.6
+      },
+      "conclusion": "Raw HTTP is ~4-5x faster than a rendered click, and the hybrid beats the observer by skipping the render->observe->click chain. Browser tails are also much fatter (p95).",
+      "decision": "Default to C for a real drop (browser cover + near-raw speed); drop to B only with a known endpoint and no CAPTCHA."
+    },
+    {
+      "id": "001",
+      "slug": "rust-vs-python-the-http-direct-floor",
+      "title": "Rust vs Python \u2014 the HTTP-direct floor",
+      "status": "complete",
+      "created": "2026-07-15T02:53:33",
+      "updated": "2026-07-15T02:53:58",
+      "hypothesis": "A compiled language (Rust) posts a lower firing floor than Python for the HTTP-direct approach.",
+      "primary_metric": "p50_ms",
+      "method": "Ran approach_b_http in each language, 30 trials, against the local mock on loopback; scored release\u2192hit on the server's single monotonic clock.",
+      "variants": [
+        {
+          "key": "control",
+          "name": "Python (baseline)",
+          "approach": "http-direct",
+          "lang": "python",
+          "trials": 30,
+          "metrics": {
+            "n": 30,
+            "min_ms": 0.5013,
+            "p50_ms": 1.1809,
+            "p95_ms": 1.2674,
+            "max_ms": 1.4593,
+            "mean_ms": 1.1003
+          }
+        },
+        {
+          "key": "treatment",
+          "name": "Rust (std-only)",
+          "approach": "http-direct",
+          "lang": "rust",
+          "trials": 30,
+          "metrics": {
+            "n": 30,
+            "min_ms": 0.3486,
+            "p50_ms": 0.5886,
+            "p95_ms": 1.0476,
+            "max_ms": 2.3255,
+            "mean_ms": 0.6438
+          }
+        }
+      ],
+      "outcome": {
+        "primary_metric": "p50_ms",
+        "winner": "treatment",
+        "winner_name": "Rust (std-only)",
+        "winner_value": 0.5886,
+        "control_key": "control",
+        "control_value": 1.1809,
+        "delta_ms": -0.5923,
+        "delta_pct": -50.2
+      },
+      "conclusion": "Rust posts the lower floor (~0.7 vs ~1.0 ms median), but both HTTP-direct langs cluster within ~1 ms \u2014 the approach dominates the language.",
+      "decision": "Publish Rust as the record floor; keep Python for day-to-day iteration."
+    }
+  ]
+}

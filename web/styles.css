@@ -171,3 +171,62 @@ pre.code .fn { color: var(--gold); }
   gap: 14px; flex-wrap: wrap; color: var(--muted-2); font-size: 13px;
 }
 .foot a { color: var(--gold); }
+
+/* ---- experiments: index cards ------------------------------------------- */
+.exp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+@media (max-width: 780px) { .exp-grid { grid-template-columns: 1fr; } }
+.exp-card {
+  display: block; padding: 22px 24px; border-radius: 16px;
+  background: var(--card); border: 1px solid var(--line);
+  transition: transform .15s, border-color .15s;
+}
+.exp-card:hover { transform: translateY(-3px); border-color: #333c4e; }
+.exp-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.exp-card h3 { font-size: 18px; margin-bottom: 8px; }
+.exp-hyp { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+.exp-id { font-family: var(--mono); font-size: 12px; color: var(--muted-2); }
+.exp-outcome {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 12px;
+}
+.exp-winner { font-weight: 700; }
+.exp-delta { font-family: var(--mono); color: var(--muted); }
+
+/* status pills */
+.exp-status {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  padding: 4px 9px; border-radius: 999px; white-space: nowrap;
+}
+.exp-status--complete { color: #7ee0a8; background: rgba(126,224,168,.10); border: 1px solid rgba(126,224,168,.30); }
+.exp-status--running  { color: var(--gold); background: rgba(244,201,93,.10); border: 1px solid rgba(244,201,93,.30); }
+.exp-status--planned  { color: var(--blue); background: rgba(110,168,254,.10); border: 1px solid rgba(110,168,254,.30); }
+.exp-status--archived { color: var(--muted-2); background: rgba(155,163,178,.06); border: 1px solid var(--line); }
+
+/* ---- experiments: detail page ------------------------------------------- */
+.exp-detail { padding: clamp(28px, 6vw, 52px) 0 24px; }
+.exp-back { display: inline-block; margin-bottom: 22px; color: var(--muted); font-size: 14px; }
+.exp-back:hover { color: var(--text); }
+.exp-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.exp-detail h1 { font-size: clamp(26px, 5vw, 40px); }
+.exp-dates { color: var(--muted-2); font-size: 13px; font-family: var(--mono); margin: 8px 0 30px; }
+.exp-callout {
+  padding: 18px 22px; border-radius: 14px; margin: 0 0 24px;
+  background: var(--card-2); border: 1px solid var(--line); border-left: 3px solid var(--gold);
+  color: #d7d9e0; font-size: 15.5px;
+}
+.exp-callout--decision { border-left-color: var(--accent); }
+.exp-callout .k {
+  display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--muted); margin-bottom: 6px;
+}
+.exp-section { margin: 30px 0; }
+.exp-section > h2 { font-size: 19px; margin-bottom: 12px; }
+.exp-section > p { color: var(--muted); margin: 0; max-width: 760px; }
+.exp-result-banner {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  padding: 20px 24px; border-radius: 14px;
+  background: linear-gradient(180deg, var(--card-2), var(--card)); border: 1px solid var(--line);
+}
+.exp-result-banner .big { font-family: var(--mono); font-size: 26px; font-weight: 800; color: var(--gold); }
+.win-row { background: rgba(126,224,168,.06); }
+.win-badge { color: #7ee0a8; font-weight: 700; }

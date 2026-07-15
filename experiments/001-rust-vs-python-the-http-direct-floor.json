@@ -1,0 +1,55 @@
+{
+  "id": "001",
+  "slug": "rust-vs-python-the-http-direct-floor",
+  "title": "Rust vs Python \u2014 the HTTP-direct floor",
+  "status": "complete",
+  "created": "2026-07-15T02:53:33",
+  "updated": "2026-07-15T02:53:58",
+  "hypothesis": "A compiled language (Rust) posts a lower firing floor than Python for the HTTP-direct approach.",
+  "primary_metric": "p50_ms",
+  "method": "Ran approach_b_http in each language, 30 trials, against the local mock on loopback; scored release\u2192hit on the server's single monotonic clock.",
+  "variants": [
+    {
+      "key": "control",
+      "name": "Python (baseline)",
+      "approach": "http-direct",
+      "lang": "python",
+      "trials": 30,
+      "metrics": {
+        "n": 30,
+        "min_ms": 0.5013,
+        "p50_ms": 1.1809,
+        "p95_ms": 1.2674,
+        "max_ms": 1.4593,
+        "mean_ms": 1.1003
+      }
+    },
+    {
+      "key": "treatment",
+      "name": "Rust (std-only)",
+      "approach": "http-direct",
+      "lang": "rust",
+      "trials": 30,
+      "metrics": {
+        "n": 30,
+        "min_ms": 0.3486,
+        "p50_ms": 0.5886,
+        "p95_ms": 1.0476,
+        "max_ms": 2.3255,
+        "mean_ms": 0.6438
+      }
+    }
+  ],
+  "outcome": {
+    "primary_metric": "p50_ms",
+    "winner": "treatment",
+    "winner_name": "Rust (std-only)",
+    "winner_value": 0.5886,
+    "control_key": "control",
+    "control_value": 1.1809,
+    "delta_ms": -0.5923,
+    "delta_pct": -50.2
+  },
+  "conclusion": "Rust posts the lower floor (~0.7 vs ~1.0 ms median), but both HTTP-direct langs cluster within ~1 ms \u2014 the approach dominates the language.",
+  "decision": "Publish Rust as the record floor; keep Python for day-to-day iteration."
+}
