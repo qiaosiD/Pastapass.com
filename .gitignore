@@ -1,0 +1,12 @@
+# deps
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# benchmark output (regenerated on every run)
+benchmark/results/*.csv
+
+# playwright browsers are installed globally, nothing to ignore here
+.DS_Store

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MockPasta — Never Ending Pass Drop</title>
+<style>
+  :root { --bg:#0d0f14; --card:#161a22; --accent:#e0483a; --gold:#f4c95d; --text:#f5f3ee; --muted:#9aa3b2; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         background:radial-gradient(1200px 600px at 50% -10%, #1c2230, var(--bg)); color:var(--text);
+         min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { background:var(--card); border:1px solid #232a36; border-radius:20px; max-width:520px; width:100%;
+          padding:40px; text-align:center; box-shadow:0 30px 80px rgba(0,0,0,.45); }
+  .badge { display:inline-block; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold);
+           border:1px solid #3a3320; background:#20200f; padding:6px 12px; border-radius:999px; margin-bottom:20px; }
+  h1 { margin:0 0 6px; font-size:30px; line-height:1.1; }
+  h1 .accent { color:var(--accent); }
+  p.lead { color:var(--muted); margin:0 0 28px; font-size:15px; }
+  .price { font-size:44px; font-weight:800; margin:8px 0 4px; }
+  .price small { font-size:16px; color:var(--muted); font-weight:500; }
+  #status { font-size:13px; color:var(--muted); margin-top:22px; min-height:18px; font-variant-numeric:tabular-nums; }
+  #slot { margin-top:26px; min-height:60px; display:flex; justify-content:center; align-items:center; }
+  #buy { appearance:none; border:0; cursor:pointer; font-size:20px; font-weight:800; letter-spacing:.02em;
+         color:#fff; background:linear-gradient(180deg,#ef5b4c,#c9372a); padding:18px 40px; border-radius:14px;
+         box-shadow:0 12px 30px rgba(224,72,58,.45); animation:pop .18s ease-out; }
+  #buy:active { transform:translateY(1px); }
+  .waiting { color:var(--muted); font-size:14px; }
+  @keyframes pop { from { transform:scale(.9); opacity:0 } to { transform:scale(1); opacity:1 } }
+  .foot { margin-top:24px; font-size:11px; color:#5b6472; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">Limited Drop • Mock Environment</div>
+    <h1><span class="accent">MockPasta</span> Never-Ending Pass</h1>
+    <p class="lead">Unlimited mock pasta for one glorious mock season. Extremely limited quantity.</p>
+    <div class="price">$0.00 <small>/ benchmark unit</small></div>
+    <div id="slot"><span class="waiting">Sale not open yet…</span></div>
+    <div id="status">Connecting…</div>
+    <div class="foot">This is a local mock target for load-testing automation. No real product, no real payment.</div>
+  </div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Page logic. Two modes, chosen by ?mode=:
+//   mode=button (Approach A): on release, inject a real BUY button. A bot's
+//                             MutationObserver is expected to click it. The click
+//                             handler fires the underlying /buy request.
+//   mode=direct (Approach C): on release, fire /buy immediately from in-page JS,
+//                             skipping the DOM button + click entirely (hybrid).
+// The page exposes window.__* markers so a driving bot can read client-side timing.
+// ---------------------------------------------------------------------------
+const params = new URLSearchParams(location.search);
+const mode  = params.get('mode') || 'button';
+const trial = params.get('trial') || '0';
+
+window.__sseReady = false;
+window.__lastBuy = null;
+window.__t_release_dom = null;   // performance.now() when release signal arrived
+window.__t_click = null;         // performance.now() when the button was clicked
+
+const statusEl = document.getElementById('status');
+const slot = document.getElementById('slot');
+
+async function fireBuy(approach) {
+  const t = performance.now();
+  const res = await fetch(`/buy?approach=${encodeURIComponent(approach)}&trial=${trial}`);
+  const data = await res.json();
+  window.__lastBuy = Object.assign({}, data, { client_fire_ms: performance.now() - t });
+  if (data.ok) {
+    statusEl.textContent = `HIT ✓  server release→hit = ${(Number(data.latency_ns) / 1e6).toFixed(3)} ms`;
+  } else {
+    statusEl.textContent = `miss: ${data.error}`;
+  }
+}
+
+const es = new EventSource('/events');
+es.onopen = () => { window.__sseReady = true; statusEl.textContent = 'Armed. Waiting for drop…'; };
+es.onerror = () => { statusEl.textContent = 'SSE error (is the server running?)'; };
+
+es.addEventListener('release', () => {
+  window.__t_release_dom = performance.now();
+  if (mode === 'direct') {
+    // Approach C — hybrid: fire the underlying request instantly, no DOM click.
+    fireBuy('hybrid-direct');
+    slot.innerHTML = '<span class="waiting">Firing…</span>';
+  } else {
+    // Approach A — inject the button; the driving bot's observer clicks it.
+    slot.innerHTML = '';
+    const btn = document.createElement('button');
+    btn.id = 'buy';
+    btn.textContent = 'CLICK HERE TO BUY';
+    btn.addEventListener('click', () => {
+      window.__t_click = performance.now();
+      fireBuy('browser-click');
+    });
+    slot.appendChild(btn);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# Only needed for the browser approaches (A and C).
+# The HTTP-direct Python bot (Approach B) uses the standard library only.
+#
+#   pip install -r requirements.txt
+#   python3 -m playwright install chromium
+playwright>=1.40
