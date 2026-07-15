@@ -1,0 +1,55 @@
+{
+  "id": "003",
+  "slug": "does-pre-warming-the-connection-actually-help",
+  "title": "Does pre-warming the connection actually help?",
+  "status": "complete",
+  "created": "2026-07-15T15:02:33",
+  "updated": "2026-07-15T15:03:50",
+  "hypothesis": "A pre-warmed keep-alive socket beats opening the connection at fire time, because the TCP handshake is paid before the drop instead of inside the fire window.",
+  "primary_metric": "p50_ms",
+  "method": "Same HTTP-direct bot, one variable: warm pre-opens the fire socket before the drop; cold opens it after detecting release. Loopback, single-clock release->hit.",
+  "variants": [
+    {
+      "key": "control",
+      "name": "Cold connect (open at fire time)",
+      "approach": "conn-cold",
+      "lang": "python",
+      "trials": 40,
+      "metrics": {
+        "n": 40,
+        "min_ms": 0.796,
+        "p50_ms": 1.4815,
+        "p95_ms": 2.9287,
+        "max_ms": 3.4663,
+        "mean_ms": 1.5829
+      }
+    },
+    {
+      "key": "treatment",
+      "name": "Warm socket (pre-opened)",
+      "approach": "conn-warm",
+      "lang": "python",
+      "trials": 40,
+      "metrics": {
+        "n": 40,
+        "min_ms": 0.6156,
+        "p50_ms": 1.0995,
+        "p95_ms": 1.9063,
+        "max_ms": 1.9785,
+        "mean_ms": 1.157
+      }
+    }
+  ],
+  "outcome": {
+    "primary_metric": "p50_ms",
+    "winner": "treatment",
+    "winner_name": "Warm socket (pre-opened)",
+    "winner_value": 1.0995,
+    "control_key": "control",
+    "control_value": 1.4815,
+    "delta_ms": -0.382,
+    "delta_pct": -25.8
+  },
+  "conclusion": "Pre-warming wins \u2014 ~26% lower median (warm ~1.10 vs cold ~1.48 ms). Even on loopback, where a TCP connect is nearly free, opening the socket inside the fire window still costs ~0.4 ms. On a real TLS endpoint that gap is a full handshake (tens of ms), so warming is decisive.",
+  "decision": "Always pre-warm the fire connection before the drop; cold-connect is never worth it."
+}

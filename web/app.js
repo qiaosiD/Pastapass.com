@@ -9,6 +9,10 @@ const APPROACH = {
   "browser-observer": { tag: "A", name: "Browser observer", color: "#6ea8fe" },
   "http-direct":      { tag: "B", name: "HTTP-direct",      color: "#f4c95d" },
   "browser-hybrid":   { tag: "C", name: "Hybrid",           color: "#e0483a" },
+  "conn-warm":        { tag: "W", name: "Warm socket",      color: "#f4c95d" },
+  "conn-cold":        { tag: "K", name: "Cold connect",     color: "#6ea8fe" },
+  "fire-proactive":   { tag: "P", name: "Proactive",        color: "#7ee0a8" },
+  "fire-reactive":    { tag: "R", name: "Reactive",         color: "#e0483a" },
 };
 const meta = (k) => APPROACH[k] || { tag: "?", name: k, color: "#9aa3b2" };
 

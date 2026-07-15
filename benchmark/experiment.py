@@ -54,6 +54,11 @@ BOTS = {
     ("http-direct", "node"):   ["node", "bots/node/approach_b_http.mjs"],
     ("browser-observer", "python"): ["python3", "bots/python/approach_a_browser.py"],
     ("browser-hybrid", "python"):   ["python3", "bots/python/approach_c_hybrid.py"],
+    # experiment variants (each self-labels its CSV via --approach/--lang):
+    ("conn-warm", "python"): ["python3", "bots/python/approach_b_http.py", "--mode", "warm", "--approach", "conn-warm", "--lang", "python"],
+    ("conn-cold", "python"): ["python3", "bots/python/approach_b_http.py", "--mode", "cold", "--approach", "conn-cold", "--lang", "python"],
+    ("fire-reactive", "python"):  ["python3", "bots/python/approach_fire.py", "--mode", "reactive",  "--approach", "fire-reactive",  "--lang", "python"],
+    ("fire-proactive", "python"): ["python3", "bots/python/approach_fire.py", "--mode", "proactive", "--approach", "fire-proactive", "--lang", "python"],
 }
 METRIC_KEYS = ["min_ms", "p50_ms", "p95_ms", "max_ms", "mean_ms"]
 
