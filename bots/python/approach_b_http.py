@@ -40,10 +40,12 @@ def arm(ctrl, approach, trial, base=200, jitter=300):
     ctrl.getresponse().read()
 
 
-def trial_once(approach, trial):
-    fire = _conn()                       # the connection we will fire /buy on
-    fire.request("GET", "/health")       # warm it: socket is now hot & idle
-    fire.getresponse().read()
+def trial_once(approach, trial, mode="warm"):
+    fire = None
+    if mode == "warm":
+        fire = _conn()                   # pre-open the fire connection...
+        fire.request("GET", "/health")   # ...and warm it: socket hot & idle BEFORE the drop
+        fire.getresponse().read()
 
     ctrl = _conn()
     detect = _conn()
@@ -59,7 +61,10 @@ def trial_once(approach, trial):
     resp.read()
     t_detect = time.perf_counter_ns()
 
-    # FIRE — reuse the already-open, already-warm connection. No handshake here.
+    # COLD: open the fire connection NOW — the TCP handshake lands inside the fire window.
+    # WARM: reuse the already-open, already-warm connection — no handshake here.
+    if mode == "cold":
+        fire = _conn()
     fire.request("GET", f"/buy?approach={approach}&trial={trial}")
     data = json.loads(fire.getresponse().read())
     t_fired = time.perf_counter_ns()
@@ -89,12 +94,14 @@ def main():
     ap.add_argument("--trials", type=int, default=30)
     ap.add_argument("--approach", default="http-direct")
     ap.add_argument("--lang", default="python")
+    ap.add_argument("--mode", choices=["warm", "cold"], default="warm",
+                    help="warm = pre-open the fire socket; cold = open it at fire time")
     args = ap.parse_args()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     rows = []
     for i in range(args.trials):
-        r = trial_once(args.approach, i)
+        r = trial_once(args.approach, i, args.mode)
         if r:
             rows.append({"approach": args.approach, "lang": args.lang, "trial": i, **r})
         time.sleep(0.03)

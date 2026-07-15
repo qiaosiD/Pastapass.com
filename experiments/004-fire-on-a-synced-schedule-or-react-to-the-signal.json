@@ -1,0 +1,55 @@
+{
+  "id": "004",
+  "slug": "fire-on-a-synced-schedule-or-react-to-the-signal",
+  "title": "Fire on a synced schedule, or react to the signal?",
+  "status": "complete",
+  "created": "2026-07-15T15:03:06",
+  "updated": "2026-07-15T15:03:50",
+  "hypothesis": "Firing at a clock-synced launch instant lands closer to the release than reacting to the live signal, because a reactor first pays a detect round-trip.",
+  "primary_metric": "p50_ms",
+  "method": "Same warm-connection bot, one variable: reactive long-polls then fires; proactive syncs to /api/server-time and fires at the launch instant, retrying if the server flips late. Loopback.",
+  "variants": [
+    {
+      "key": "control",
+      "name": "Reactive (long-poll then fire)",
+      "approach": "fire-reactive",
+      "lang": "python",
+      "trials": 30,
+      "metrics": {
+        "n": 30,
+        "min_ms": 0.7416,
+        "p50_ms": 1.0973,
+        "p95_ms": 1.4398,
+        "max_ms": 1.5058,
+        "mean_ms": 1.111
+      }
+    },
+    {
+      "key": "treatment",
+      "name": "Proactive (fire at synced launch)",
+      "approach": "fire-proactive",
+      "lang": "python",
+      "trials": 30,
+      "metrics": {
+        "n": 30,
+        "min_ms": 0.2988,
+        "p50_ms": 0.8748,
+        "p95_ms": 1.1827,
+        "max_ms": 1.5197,
+        "mean_ms": 0.8675
+      }
+    }
+  ],
+  "outcome": {
+    "primary_metric": "p50_ms",
+    "winner": "treatment",
+    "winner_name": "Proactive (fire at synced launch)",
+    "winner_value": 0.8748,
+    "control_key": "control",
+    "control_value": 1.0973,
+    "delta_ms": -0.2225,
+    "delta_pct": -20.3
+  },
+  "conclusion": "Proactive wins \u2014 ~20% lower median (proactive ~0.87 vs reactive ~1.10 ms). Firing at the synced launch instant skips the detect round-trip a reactor pays. On loopback that round-trip is tiny so the edge is modest; it scales with network RTT, where proactive can beat a reactor by nearly a full round-trip.",
+  "decision": "Fire proactively at the clock-synced launch, keeping a reactive long-poll as backup \u2014 first success wins."
+}

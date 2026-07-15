@@ -15,6 +15,7 @@
 <header class="nav">
   <a class="brand" href="#top"><span class="brand-mark">🍝</span> PastaPass</a>
   <nav class="nav-links">
+    <a href="#explained">Explained</a>
     <a href="#experiments">Experiments</a>
     <a href="#results">Results</a>
     <a href="#log">Log</a>
@@ -73,6 +74,74 @@
       <div class="cta">
         <a class="btn btn-primary" href="#results">See the numbers ↓</a>
         <a class="btn btn-ghost" href="#experiments">Experiments →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPLAINED (plain english) ---------------------------------------------->
+  <section id="explained" class="panel">
+    <div class="panel-head">
+      <h2>How this works — in plain English</h2>
+      <p class="sub">No jargon. The whole project, start to finish, the way you'd explain it to a friend.</p>
+    </div>
+    <div class="story">
+      <div class="story-beat">
+        <div class="story-num">1</div>
+        <div>
+          <h3>The question</h3>
+          <p>Some things sell out the second they go on sale — concert tickets, sneaker drops, limited-edition passes. Gone in <em>seconds</em>. So here's the question this project pokes at: can a small program click <strong>“Buy”</strong> faster and more reliably than a person mashing the button? And if so — how, and by how much?</p>
+        </div>
+      </div>
+      <div class="story-beat">
+        <div class="story-num">2</div>
+        <div>
+          <h3>The honest catch (this part matters)</h3>
+          <p>You'll hear people brag their bot “clicks within one millisecond.” That's not really a thing. When a sale opens, the <em>“it's live now”</em> signal has to physically travel across the internet to your computer — and that trip takes <strong>tens of milliseconds</strong>, every time, no matter how clever the code is. Nothing beats the speed of light down a wire.</p>
+          <p>So the real contest isn't raw clicking speed. It's being <strong>ready</strong> — already signed in, already connected, already aimed — and reacting the instant the button lights up, a hair faster than everyone else.</p>
+        </div>
+      </div>
+      <div class="story-beat">
+        <div class="story-num">3</div>
+        <div>
+          <h3>Three ways to grab it</h3>
+          <p>The project races three strategies head-to-head:</p>
+          <ul>
+            <li><strong>A real web browser</strong> that loads the page like a human would and clicks the button the moment it appears. Most realistic — but a whole browser is slow to react.</li>
+            <li><strong>Skipping the browser entirely</strong> and talking straight to the store's server — just the bare request, nothing else. Fastest by far, but fragile and fiddly to set up.</li>
+            <li><strong>A hybrid</strong> — keep a real browser for the “stay logged in / look human” part, but fire the actual purchase request directly. The practical middle ground.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="story-beat">
+        <div class="story-num">4</div>
+        <div>
+          <h3>Measuring it without cheating</h3>
+          <p>Here's the tricky bit. To compare strategies you have to <em>time</em> them. But if you clock the click on <em>your</em> computer and the sale opening on <em>their</em> computer, the two clocks won't agree — and they disagree by exactly the few milliseconds we're trying to measure.</p>
+          <p>The fix: let <strong>one</strong> computer be the only stopwatch. A stand-in “store” marks the exact instant it makes the button live and the exact instant the click lands, then subtracts. One clock, no disagreement, no fudging the numbers.</p>
+        </div>
+      </div>
+      <div class="story-beat">
+        <div class="story-num">5</div>
+        <div>
+          <h3>What we actually found</h3>
+          <ul>
+            <li><strong>Skipping the browser is ~4–5× faster</strong> than clicking a rendered button — a whole browser in the path really costs you.</li>
+            <li><strong>Warming up the connection ahead of time</strong> (opening it <em>before</em> the drop, not at the last second) shaves off about a quarter of the delay.</li>
+            <li><strong>Firing on a precise, pre-set schedule</strong> — instead of waiting to <em>notice</em> the sale opened — beats reacting by roughly 20%.</li>
+            <li><strong>The programming language barely matters.</strong> Rust edges Python, but they're all within a whisker. The <em>strategy</em> is what wins, not the language.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="story-beat">
+        <div class="story-num">6</div>
+        <div>
+          <h3>The honest fine print</h3>
+          <ul>
+            <li><strong>Nothing here touches a real store.</strong> Everything runs against a fake copy built for testing — no real product, no real payment.</li>
+            <li><strong>These gaps get bigger on real internet.</strong> The tests run on one computer talking to itself, where distances are tiny; over a real home connection the differences grow a lot.</li>
+            <li><strong>Real drops fight back.</strong> Big sales often funnel everyone into a random “waiting room” lottery — and when it's a lottery, being fast doesn't help. This is a study of the <em>mechanics</em>, not a how-to for jumping a real queue.</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
