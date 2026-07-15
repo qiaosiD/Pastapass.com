@@ -16,14 +16,17 @@ const fmt = (ms) =>
   ms < 1 ? ms.toFixed(3) : ms < 10 ? ms.toFixed(2) : ms.toFixed(1);
 
 async function load() {
-  // Try the live API first; fall back to bundled sample data.
-  try {
-    const r = await fetch("/api/results", { headers: { accept: "application/json" } });
-    if (r.ok) {
-      const data = await r.json();
-      if (data.groups && data.groups.length) return { data, sample: false };
-    }
-  } catch (_) { /* offline / static preview — fall through */ }
+  // Portable across hosts: a live API (Cloudflare/Vercel-KV) if present, else the
+  // committed results.json (Vercel static deploy), else bundled sample data.
+  for (const url of ["/api/results", "/results.json"]) {
+    try {
+      const r = await fetch(url, { headers: { accept: "application/json" } });
+      if (r.ok) {
+        const data = await r.json();
+        if (data.groups && data.groups.length) return { data, sample: false };
+      }
+    } catch (_) { /* try the next source */ }
+  }
 
   const r = await fetch("/sample-results.json");
   return { data: await r.json(), sample: true };
@@ -117,6 +120,33 @@ function renderTable(groups) {
   }).join("");
 }
 
+// --- the A/B-test log: one row per benchmark run, newest first --------------
+function renderRuns(runs) {
+  const el = document.getElementById("run-log-body");
+  if (!el) return;
+  if (!runs || !runs.length) {
+    el.innerHTML = '<tr><td colspan="6" class="muted">No runs logged yet.</td></tr>';
+    return;
+  }
+  el.innerHTML = runs
+    .map((run, i) => ({ run, n: i + 1 }))
+    .reverse()
+    .map(({ run, n }) => {
+      const f = run.fastest || {};
+      const m = meta(f.approach);
+      const when = run.at ? new Date(run.at).toLocaleString() : "—";
+      return `<tr>
+        <td class="num">#${n}</td>
+        <td>${when}</td>
+        <td>${run.label ? run.label : '<span class="muted">—</span>'}</td>
+        <td class="num">${(run.measurements || 0).toLocaleString()}</td>
+        <td><span class="dot" style="background:${m.color}"></span>${m.tag} · ${m.name} [${f.lang || "?"}]</td>
+        <td class="num">${f.p50_ms != null ? fmt(f.p50_ms) : "—"}</td>
+      </tr>`;
+    })
+    .join("");
+}
+
 function renderMeta(data, sample) {
   const parts = [];
   if (data.total_runs) parts.push(`${data.total_runs} run${data.total_runs === 1 ? "" : "s"}`);
@@ -130,6 +160,48 @@ function renderMeta(data, sample) {
   document.getElementById("results-meta").textContent = parts.length ? "· " + parts.join(" · ") : "";
 }
 
+// --- experiments index: one card per tracked A/B test ----------------------
+const STATUS_LABEL = { planned: "planned", running: "running", complete: "complete", archived: "archived" };
+
+async function loadExperiments() {
+  try {
+    const r = await fetch("/experiments.json", { headers: { accept: "application/json" } });
+    if (r.ok) return await r.json();
+  } catch (_) { /* none published yet */ }
+  return null;
+}
+
+function renderExperiments(payload) {
+  const el = document.getElementById("experiments-list");
+  if (!el) return;
+  const exps = (payload && payload.experiments) || [];
+  if (!exps.length) {
+    el.innerHTML = '<p class="muted">No experiments yet — create one with <code>python3 benchmark/experiment.py new</code>.</p>';
+    return;
+  }
+  el.innerHTML = exps.map((e) => {
+    const o = e.outcome || {};
+    const hyp = e.hypothesis || "";
+    const hypShort = hyp.length > 130 ? hyp.slice(0, 128) + "…" : hyp;
+    const delta = o.delta_pct != null ? `${o.delta_pct > 0 ? "+" : ""}${o.delta_pct}%` : "";
+    const outcome = o.winner_name
+      ? `<div class="exp-outcome">
+           <span class="exp-winner">🏆 ${o.winner_name}</span>
+           <span class="exp-delta">${o.winner_value != null ? fmt(o.winner_value) + " ms" : ""}${delta ? " · " + delta : ""}</span>
+         </div>`
+      : `<div class="exp-outcome muted">${(e.variants || []).length} variant${(e.variants || []).length === 1 ? "" : "s"} · not run yet</div>`;
+    return `<a class="exp-card" href="/experiment.html?id=${encodeURIComponent(e.id)}">
+      <div class="exp-card-top">
+        <span class="exp-status exp-status--${e.status}">${STATUS_LABEL[e.status] || e.status}</span>
+        <span class="exp-id">#${e.id}</span>
+      </div>
+      <h3>${e.title}</h3>
+      <p class="exp-hyp">${hypShort}</p>
+      ${outcome}
+    </a>`;
+  }).join("");
+}
+
 (async function main() {
   const { data, sample } = await load();
   const groups = data.groups || [];
@@ -137,5 +209,7 @@ function renderMeta(data, sample) {
   renderHeadline(groups);
   renderChart(groups);
   renderTable(groups);
+  renderRuns(data.runs);
   renderMeta(data, sample);
+  renderExperiments(await loadExperiments());
 })();

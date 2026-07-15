@@ -15,11 +15,13 @@
 <header class="nav">
   <a class="brand" href="#top"><span class="brand-mark">🍝</span> PastaPass</a>
   <nav class="nav-links">
+    <a href="#experiments">Experiments</a>
     <a href="#results">Results</a>
+    <a href="#log">Log</a>
     <a href="#approaches">Approaches</a>
     <a href="#method">Method</a>
     <a href="#stack">Stack</a>
-    <a class="ext" href="https://github.com/" target="_blank" rel="noopener">GitHub ↗</a>
+    <a class="ext" href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">GitHub ↗</a>
   </nav>
 </header>
 
@@ -43,8 +45,20 @@
 
     <div class="cta">
       <a class="btn btn-primary" href="#results">See the numbers ↓</a>
-      <a class="btn btn-ghost" href="https://github.com/" target="_blank" rel="noopener">Read the code ↗</a>
+      <a class="btn btn-ghost" href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">Read the code ↗</a>
     </div>
+  </section>
+
+  <!-- EXPERIMENTS ------------------------------------------------------------>
+  <section id="experiments" class="panel">
+    <div class="panel-head">
+      <h2>Experiments</h2>
+      <p class="sub">
+        Each A/B test as a tracked experiment — hypothesis, method, the variants compared, and the
+        measured outcome. Click any card for the full write-up.
+      </p>
+    </div>
+    <div id="experiments-list" class="exp-grid"><!-- filled by app.js --></div>
   </section>
 
   <!-- RESULTS ---------------------------------------------------------------->
@@ -82,6 +96,29 @@
       On loopback this isolates pure code/strategy overhead; real network round-trip (tens of ms)
       dominates on a deployed target. The ranking between strategies holds either way.
     </p>
+  </section>
+
+  <!-- A/B TEST LOG ---------------------------------------------------------->
+  <section id="log" class="panel">
+    <div class="panel-head">
+      <h2>A/B test log</h2>
+      <p class="sub">
+        Every benchmark run, logged over time — newest first. Each run is versioned in git and
+        published on push, so the history is reproducible, not just a snapshot.
+      </p>
+    </div>
+    <div class="table-wrap">
+      <table id="run-log">
+        <thead>
+          <tr>
+            <th class="num">#</th><th>When</th><th>Label</th>
+            <th class="num">measurements</th><th>fastest</th><th class="num">p50 ms</th>
+          </tr>
+        </thead>
+        <tbody id="run-log-body"><!-- filled by app.js --></tbody>
+      </table>
+      <p class="axis-note">Logged by <code>benchmark/build_dashboard_data.py</code> into <code>web/results.json</code>.</p>
+    </div>
   </section>
 
   <!-- APPROACHES ------------------------------------------------------------->
@@ -174,29 +211,29 @@
   <section id="stack" class="panel">
     <div class="panel-head">
       <h2>How this site is built</h2>
-      <p class="sub">A small, honest full-stack slice — all on Cloudflare’s free tier.</p>
+      <p class="sub">A small, honest slice — static on Vercel, data versioned in git.</p>
     </div>
     <div class="flow">
-      <div class="flow-step"><span class="flow-k">Bots</span><span class="flow-v">Python · Node · Go race a mock drop</span></div>
+      <div class="flow-step"><span class="flow-k">Bots</span><span class="flow-v">Python · Node · Go · Rust race a mock drop</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-k">Uploader</span><span class="flow-v">Python posts CSV rows to the API</span></div>
+      <div class="flow-step"><span class="flow-k">Aggregator</span><span class="flow-v">Python logs each run to results.json</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-k">Pages Function</span><span class="flow-v">token-guarded ingest &amp; read API</span></div>
+      <div class="flow-step"><span class="flow-k">Git</span><span class="flow-v">every run committed &amp; versioned</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-k">D1</span><span class="flow-v">edge SQLite stores every trial</span></div>
+      <div class="flow-step"><span class="flow-k">Vercel</span><span class="flow-v">auto-deploys the static site on push</span></div>
       <div class="flow-arrow">→</div>
-      <div class="flow-step"><span class="flow-k">This page</span><span class="flow-v">reads aggregates, renders live</span></div>
+      <div class="flow-step"><span class="flow-k">This page</span><span class="flow-v">reads results.json, renders live</span></div>
     </div>
     <p class="fineprint">
-      Writes are private (bearer-token); the dashboard is read-only. Percentiles are computed the same
-      way in the API and the local aggregator, so the site and the terminal never disagree.
+      No database to run — the A/B-test history lives in a versioned JSON, so the site and the
+      terminal never disagree, and every published number is reproducible from the commit.
     </p>
   </section>
 </main>
 
 <footer class="foot">
   <span>Built as a systems/latency study. No real product, no real payment — the target is a local mock.</span>
-  <a href="https://github.com/" target="_blank" rel="noopener">Source on GitHub ↗</a>
+  <a href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">Source on GitHub ↗</a>
 </footer>
 
 <script src="/app.js"></script>

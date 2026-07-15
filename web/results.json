@@ -1,0 +1,183 @@
+{
+  "updated_at": "2026-07-15T23:05:00",
+  "total_runs": 2,
+  "total_measurements": 99,
+  "groups": [
+    {
+      "approach": "http-direct",
+      "lang": "rust",
+      "n": 25,
+      "min_ms": 0.2015,
+      "p50_ms": 0.6329,
+      "p95_ms": 2.1517,
+      "max_ms": 4.4434,
+      "mean_ms": 0.8501
+    },
+    {
+      "approach": "http-direct",
+      "lang": "python",
+      "n": 25,
+      "min_ms": 1.013,
+      "p50_ms": 1.2223,
+      "p95_ms": 1.4661,
+      "max_ms": 1.5088,
+      "mean_ms": 1.2329
+    },
+    {
+      "approach": "http-direct",
+      "lang": "node",
+      "n": 25,
+      "min_ms": 0.8927,
+      "p50_ms": 1.4018,
+      "p95_ms": 2.6656,
+      "max_ms": 4.518,
+      "mean_ms": 1.5938
+    },
+    {
+      "approach": "browser-hybrid",
+      "lang": "python",
+      "n": 12,
+      "min_ms": 2.8979,
+      "p50_ms": 3.1224,
+      "p95_ms": 5.5187,
+      "max_ms": 5.5187,
+      "mean_ms": 3.495
+    },
+    {
+      "approach": "browser-observer",
+      "lang": "python",
+      "n": 12,
+      "min_ms": 2.6653,
+      "p50_ms": 3.5122,
+      "p95_ms": 8.604,
+      "max_ms": 8.604,
+      "mean_ms": 4.3148
+    }
+  ],
+  "runs": [
+    {
+      "at": "2026-07-15T22:40:00",
+      "label": "HTTP-direct sweep",
+      "measurements": 99,
+      "fastest": {
+        "approach": "http-direct",
+        "lang": "rust",
+        "p50_ms": 0.7675
+      },
+      "groups": [
+        {
+          "approach": "http-direct",
+          "lang": "rust",
+          "n": 25,
+          "min_ms": 0.3042,
+          "p50_ms": 0.7675,
+          "p95_ms": 0.8355,
+          "max_ms": 0.849,
+          "mean_ms": 0.7164
+        },
+        {
+          "approach": "http-direct",
+          "lang": "python",
+          "n": 25,
+          "min_ms": 0.5783,
+          "p50_ms": 1.3064,
+          "p95_ms": 8.6115,
+          "max_ms": 15.546,
+          "mean_ms": 2.1192
+        },
+        {
+          "approach": "http-direct",
+          "lang": "node",
+          "n": 25,
+          "min_ms": 0.9391,
+          "p50_ms": 1.5013,
+          "p95_ms": 1.9997,
+          "max_ms": 10.9792,
+          "mean_ms": 1.8875
+        },
+        {
+          "approach": "browser-hybrid",
+          "lang": "python",
+          "n": 12,
+          "min_ms": 2.8979,
+          "p50_ms": 3.1224,
+          "p95_ms": 5.5187,
+          "max_ms": 5.5187,
+          "mean_ms": 3.495
+        },
+        {
+          "approach": "browser-observer",
+          "lang": "python",
+          "n": 12,
+          "min_ms": 2.6653,
+          "p50_ms": 3.5122,
+          "p95_ms": 8.604,
+          "max_ms": 8.604,
+          "mean_ms": 4.3148
+        }
+      ]
+    },
+    {
+      "at": "2026-07-15T23:05:00",
+      "label": "re-run, warm cache",
+      "measurements": 99,
+      "fastest": {
+        "approach": "http-direct",
+        "lang": "rust",
+        "p50_ms": 0.6329
+      },
+      "groups": [
+        {
+          "approach": "http-direct",
+          "lang": "rust",
+          "n": 25,
+          "min_ms": 0.2015,
+          "p50_ms": 0.6329,
+          "p95_ms": 2.1517,
+          "max_ms": 4.4434,
+          "mean_ms": 0.8501
+        },
+        {
+          "approach": "http-direct",
+          "lang": "python",
+          "n": 25,
+          "min_ms": 1.013,
+          "p50_ms": 1.2223,
+          "p95_ms": 1.4661,
+          "max_ms": 1.5088,
+          "mean_ms": 1.2329
+        },
+        {
+          "approach": "http-direct",
+          "lang": "node",
+          "n": 25,
+          "min_ms": 0.8927,
+          "p50_ms": 1.4018,
+          "p95_ms": 2.6656,
+          "max_ms": 4.518,
+          "mean_ms": 1.5938
+        },
+        {
+          "approach": "browser-hybrid",
+          "lang": "python",
+          "n": 12,
+          "min_ms": 2.8979,
+          "p50_ms": 3.1224,
+          "p95_ms": 5.5187,
+          "max_ms": 5.5187,
+          "mean_ms": 3.495
+        },
+        {
+          "approach": "browser-observer",
+          "lang": "python",
+          "n": 12,
+          "min_ms": 2.6653,
+          "p50_ms": 3.5122,
+          "p95_ms": 8.604,
+          "max_ms": 8.604,
+          "mean_ms": 4.3148
+        }
+      ]
+    }
+  ]
+}

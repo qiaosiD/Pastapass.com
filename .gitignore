@@ -10,6 +10,9 @@ venv/
 .dev.vars
 .mf/
 
+# vercel
+.vercel
+
 # benchmark output (regenerated on every run)
 benchmark/results/*.csv
 
