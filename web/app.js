@@ -213,3 +213,51 @@ function renderExperiments(payload) {
   renderMeta(data, sample);
   renderExperiments(await loadExperiments());
 })();
+
+// --- drop countdown (hero) -------------------------------------------------
+(function dropCountdown() {
+  const DROP = new Date("2026-07-16T14:00:00-04:00"); // the drop — 2:00 PM ET (edit to re-target)
+  const $ = (id) => document.getElementById(id);
+  const buy = $("drop-buy"), note = $("drop-note"), cap = $("cd-caption");
+  if (!buy) return;
+  let previewing = false, previewTimer = null;
+  const pad = (n) => String(n).padStart(2, "0");
+
+  const setLive = (on) => {
+    buy.classList.toggle("is-live", on);
+    buy.classList.toggle("is-locked", !on);
+  };
+
+  function tick() {
+    if (previewing) return;                 // preview owns the button while active
+    const ms = DROP.getTime() - Date.now();
+    if (ms <= 0) {
+      setLive(true);
+      ["cd-days", "cd-hours", "cd-mins", "cd-secs"].forEach((id) => { const el = $(id); if (el) el.textContent = "00"; });
+      if (cap) cap.textContent = "the drop is live — click as fast as you can";
+      return;
+    }
+    setLive(false);
+    const s = Math.floor(ms / 1000);
+    const seg = { "cd-days": Math.floor(s / 86400), "cd-hours": pad(Math.floor((s % 86400) / 3600)),
+                  "cd-mins": pad(Math.floor((s % 3600) / 60)), "cd-secs": pad(s % 60) };
+    for (const id in seg) { const el = $(id); if (el) el.textContent = seg[id]; }
+  }
+
+  const prev = $("drop-preview");
+  if (prev) prev.addEventListener("click", (e) => {
+    e.preventDefault();
+    previewing = true;
+    setLive(true);
+    if (note) note.textContent = "🍝 that's the button lighting up at 2 PM — the bots hit it in under a millisecond.";
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(() => { previewing = false; if (note) note.textContent = ""; tick(); }, 6000);
+  });
+
+  buy.addEventListener("click", () => {
+    if (buy.classList.contains("is-live")) $("results")?.scrollIntoView({ behavior: "smooth" });
+  });
+
+  tick();
+  setInterval(tick, 1000);
+})();
