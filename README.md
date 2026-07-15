@@ -4,8 +4,8 @@ A/B tests three "click the button the instant it appears" strategies against a *
 mock target you control**, and measures each one with **sub-millisecond, clock-sync-free**
 timing. Build strategy first, tune it against the mock, and never hammer a real site
 during development. The measured numbers are also **published to a small read-only
-dashboard** (log-scale chart + stats table) on Cloudflare Pages + D1 — see *Publishing
-results* below and [`DEPLOY.md`](DEPLOY.md).
+dashboard** (log-scale chart, stats table, and a page per experiment) — a static site on
+**Vercel** — see *Publishing results* below and [`DEPLOY-VERCEL.md`](DEPLOY-VERCEL.md).
 
 > **Reality check on "1 millisecond."** There are two different moments:
 > 1. **1 ms after the button appears in _your browser_** → achievable (this repo measures ~0.4–3 ms depending on strategy).
@@ -33,7 +33,7 @@ reverse-engineered the endpoint and need the absolute floor.
 
 1. **Local (your Mac).** Simplest. Latency = your home connection's RTT to the target. Fine for many drops; this is where you develop and benchmark.
 2. **VPS in the target's region** (e.g. AWS `us-east-1` if the site is there). Cuts network RTT from ~50 ms to a few ms. This is what serious snipers use — and for Approach B it's the single biggest speed lever, far bigger than language choice.
-3. **Edge / serverless (Vercel functions, Lambda).** *Anti-pattern for the firing bot* — cold starts and no persistent warm connection. Good only for **hosting the static page** or a **scheduled trigger**, not for the time-critical click. *(This repo's own dashboard uses exactly this — Cloudflare Pages/Functions/D1 — for the **page and results store**, never the firing path.)*
+3. **Edge / serverless (Vercel functions, Lambda).** *Anti-pattern for the firing bot* — cold starts and no persistent warm connection. Good only for **hosting the static page** or a **scheduled trigger**, not for the time-critical click. *(This repo's own dashboard is exactly that — a static site on Vercel — for the **page and results**, never the firing path.)*
 
 **Where does GitHub fit?** GitHub is for **storing the code** (version control). Don't run the
 time-critical click on **GitHub Actions** — its cron is minute-granular and frequently delayed
@@ -147,44 +147,35 @@ The mock mirrors the real shape — `/api/server-time` (reports the armed launch
 
 ---
 
-## Publishing results — live dashboard + data backend
+## Publishing results — live dashboard on Vercel
 
 The table above is also served as a **public, read-only web dashboard** — a log-scale lollipop
-chart (median dot → p95 line) plus the full stats table. It runs on **Cloudflare Pages + Pages
-Functions + D1** (edge SQLite), all on the free tier.
+chart (median dot → p95 line), the full stats table, an **A/B-test log**, and a page per tracked
+**experiment**. It's a **static site on Vercel** — no backend, no database.
 
-This is the **legitimate** side of the serverless story from the *Infra paths* section above:
-Cloudflare hosts the **static page** and **stores/serves results** — it never runs the firing bot
-or the single-clock timing server (those stay always-on/local, exactly as the methodology requires).
-
-**Data flow**
+The data is a committed JSON, so every published number is **reproducible from a git commit**:
 
 ```
-bots → benchmark/results/*.csv → benchmark/upload.py → POST /api/ingest → D1
-                                                     → GET  /api/results → web/ dashboard
+bots → benchmark/results/*.csv → benchmark/build_dashboard_data.py → web/results.json     (leaderboard + run log)
+                               → benchmark/experiment.py            → web/experiments.json (per experiment)
+                               → git commit + push → Vercel auto-redeploys
 ```
 
-Run the benchmark locally, then push the numbers up:
+Run the benchmark, regenerate the JSON, commit, push:
 
 ```bash
-./run-all.sh                                   # writes benchmark/results/*.csv
-PASTAPASS_URL=https://<your-project>.pages.dev \
-PASTAPASS_TOKEN=<ingest-secret> \
-python3 benchmark/upload.py                    # → D1; refresh the dashboard
+./run-all.sh                                              # writes benchmark/results/*.csv
+python3 benchmark/build_dashboard_data.py --label "..."  # → web/results.json
+python3 benchmark/experiment.py build                    # → web/experiments.json (if you ran experiments)
+# commit web/results.json / web/experiments.json / experiments/ and push → Vercel redeploys
 ```
 
-**API** (Pages Functions — separate from the mock server's endpoints)
+**No env vars, no database** — the whole dashboard is `web/` plus a versioned JSON. Before the first
+run the page renders **labeled sample data**, so it's never empty. Full deploy steps are in
+**[`DEPLOY-VERCEL.md`](DEPLOY-VERCEL.md)**.
 
-| endpoint | auth | purpose |
-|---|---|---|
-| `GET /api/results` | public | aggregated stats for the dashboard (same nearest-rank percentiles as `aggregate.py`) |
-| `POST /api/ingest` | Bearer token | insert measurement rows (the uploader only) |
-
-Writes require the `INGEST_TOKEN` secret, so visitors **view** the numbers but can never mutate them.
-Before the first upload the page renders **labeled sample data**, so it's never empty.
-
-Full setup (create D1, apply schema, deploy, attach a domain) is in **[`DEPLOY.md`](DEPLOY.md)**.
-Local preview with the API and a local D1: `npm install && npm run dev`.
+*(Want live logging — POST results from any machine without a commit? That needs a store like
+Vercel KV; for a portfolio dashboard the committed-JSON approach is cleaner.)*
 
 ---
 
@@ -249,21 +240,21 @@ bots/
   go/approach_b_http.go         Approach B in Go   (compiled tier)
   rust/approach_b_http.rs       Approach B in Rust (std-only, absolute floor)
 benchmark/
-  aggregate.py         merges results/*.csv into one sorted table
-  upload.py            pushes results/*.csv → /api/ingest (into D1)
-  results/             per-run CSVs (gitignored)
-web/                   read-only results dashboard (Cloudflare Pages)
-  index.html           hero + log-scale chart + stats table
-  styles.css, app.js   dark theme; fetches /api/results (sample-data fallback)
-  sample-results.json  labeled placeholder shown before the first upload
-functions/api/         Cloudflare Pages Functions (the dashboard's API)
-  results.js           GET  /api/results — public aggregates
-  ingest.js            POST /api/ingest  — token-guarded writes → D1
-schema.sql             D1 measurements table
-wrangler.toml          Pages + D1 binding config
-package.json           wrangler scripts (dev / deploy / db:schema)
-run-all.sh             one-command benchmark
-DEPLOY.md              step-by-step Cloudflare deploy
+  aggregate.py             merges results/*.csv into one sorted table
+  build_dashboard_data.py  results/*.csv → web/results.json (leaderboard + run log)
+  experiment.py            create/run/conclude A/B experiments → web/experiments.json
+  results/                 per-run CSVs (gitignored)
+experiments/               one JSON per tracked experiment (versioned)
+web/                       static dashboard (Vercel)
+  index.html               hero + chart + stats table + A/B-test log + experiments index
+  styles.css, app.js       dark theme; reads results.json / experiments.json (sample fallback)
+  experiment.html, .js     per-experiment detail page
+  results.json             leaderboard + run-log data the dashboard renders
+  experiments.json         per-experiment data the dashboard renders
+  sample-results.json      labeled placeholder shown before the first run
+vercel.json                static hosting config (framework:null, outputDirectory: web)
+run-all.sh                 one-command benchmark
+DEPLOY-VERCEL.md           step-by-step Vercel deploy
 ```
 
 ### Server contract (any language can implement a bot against this)

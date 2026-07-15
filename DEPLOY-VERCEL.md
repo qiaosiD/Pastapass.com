@@ -4,9 +4,6 @@ The dashboard (`web/`) is a **static site** — no backend to run. It reads a co
 `web/results.json`, so "logging an A/B test" is just: run the benchmark → regenerate that
 JSON → commit → push. Vercel auto-redeploys on every push.
 
-> There's also a Cloudflare version in [`DEPLOY.md`](DEPLOY.md) (live API + D1). This Vercel
-> path is simpler and needs no database — pick one.
-
 ## The part only you can do (needs your Vercel account)
 
 I can build and verify everything locally, but I **cannot** log into your Vercel account or
@@ -15,8 +12,8 @@ push the deploy — that's yours. Two ways, either is a few minutes:
 ### Option A — Import the repo (recommended, auto-deploys on push)
 1. Go to **vercel.com → Add New → Project → Import Git Repository**.
 2. Sign in with GitHub, pick **`qiaosiD/Pastapass.com`**.
-3. Vercel reads the committed **`vercel.json`** (`outputDirectory: web`), so **Framework = Other, no build command** — leave the defaults.
-   - If it asks for a **Root Directory**, either leave it at the repo root (vercel.json points to `web/`) or set it to **`web`** — both work.
+3. Vercel reads the committed **`vercel.json`** (`framework: null, outputDirectory: web`) and serves the static `web/` folder — **Framework = Other, no build command, Root Directory left empty** (the repo root). Leave the defaults.
+   - Heads-up: `requirements.txt` lives in **`bots/python/`**, *not* the repo root — that's deliberate. A `requirements.txt` at the root makes Vercel think it's a Python app and the deploy fails with *"No python entrypoint found."*
 4. **Deploy.** Every future `git push` to `main` redeploys automatically.
 
 ### Option B — Vercel CLI
