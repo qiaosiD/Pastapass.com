@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Research — PastaPass</title>
+<meta name="description" content="The full research write-up: every hypothesis, the overarching thesis, and the measured distributions treated with real statistics — bootstrap CIs, Mann–Whitney U, and Cliff's delta." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%8A%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="/#top"><span class="brand-mark">🍝</span> PastaPass</a>
+  <nav class="nav-links">
+    <a href="/#experiments">Experiments</a>
+    <a href="/#results">Results</a>
+    <a href="/research.html" class="is-active">Research</a>
+    <a href="/#method">Method</a>
+    <a class="ext" href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</header>
+
+<main id="top">
+  <article class="research">
+    <!-- INTRO / THESIS ---------------------------------------------------->
+    <header class="rsrch-head">
+      <span class="rsrch-kicker">Research write-up</span>
+      <h1>Is a bot faster than a finger — and by how much, really?</h1>
+      <p class="rsrch-lead">
+        Four hypotheses, one mock drop, one monotonic clock. Every arm is run repeatedly and
+        its <em>distribution</em> — not a single number — is what gets judged. Latencies are
+        right-skewed, so the summary below leans on the honest tools: percentiles, a
+        <strong>bootstrap 95% CI on the median</strong>, and nonparametric
+        <strong>Mann–Whitney U</strong> + <strong>Cliff's δ</strong> to decide whether an arm is
+        really faster or just lucky.
+      </p>
+      <p class="rsrch-meta muted" id="rsrch-meta">Loading…</p>
+    </header>
+
+    <!-- THE THESIS -->
+    <section class="rsrch-section">
+      <h2>The thesis, in one breath</h2>
+      <p class="rsrch-thesis">
+        You can't beat the speed of light down a wire, so raw click-speed is a myth — the win comes
+        from being <strong>ready</strong>: skip the browser, warm the socket, and fire on a synced
+        clock rather than reacting to the signal. Each of those is a testable claim below, and each
+        one holds — the <em>strategy</em> dominates, while the programming language barely matters.
+      </p>
+    </section>
+
+    <!-- HYPOTHESES + VERDICTS (JS) -->
+    <section class="rsrch-section">
+      <h2>Hypotheses &amp; verdicts</h2>
+      <p class="sub">Each hypothesis, its head-to-head medians with 95% CIs, and a significance verdict. Click through for the full experiment.</p>
+      <div id="hypotheses" class="hyp-list"><p class="muted">Loading hypotheses…</p></div>
+    </section>
+
+    <!-- DISTRIBUTIONS EXPLORER (JS) -->
+    <section class="rsrch-section">
+      <h2>Distributions — every run, every arm</h2>
+      <p class="sub">
+        The whole point of running each use-case ~30× is the <em>shape</em>. Toggle the view; hover any
+        point to read that individual run.
+      </p>
+      <div class="dist-toolbar" id="dist-toolbar" role="tablist" aria-label="Chart format">
+        <button class="seg-btn is-active" data-fmt="raincloud">Raincloud</button>
+        <button class="seg-btn" data-fmt="box">Box</button>
+        <button class="seg-btn" data-fmt="strip">Strip</button>
+        <button class="seg-btn" data-fmt="ecdf">ECDF</button>
+      </div>
+      <div class="dist-wrap">
+        <div id="dist-chart" class="chart dist-chart"></div>
+        <div id="dist-tip" class="dist-tip" hidden></div>
+      </div>
+      <p class="axis-note muted" id="dist-caption"></p>
+    </section>
+
+    <!-- FULL STATS TABLE (JS) -->
+    <section class="rsrch-section">
+      <h2>Full statistics — per arm</h2>
+      <p class="sub">Median carries its bootstrap 95% CI. CV = spread relative to level (std ÷ mean).</p>
+      <div class="table-wrap">
+        <table id="stats-table">
+          <thead>
+            <tr>
+              <th>Arm</th><th class="num">n</th><th class="num">mean</th><th class="num">std</th>
+              <th class="num">p50 (95% CI)</th><th class="num">p90</th><th class="num">p95</th>
+              <th class="num">p99</th><th class="num">IQR</th><th class="num">CV</th>
+            </tr>
+          </thead>
+          <tbody><!-- filled by research.js --></tbody>
+        </table>
+        <p class="axis-note muted">All figures in milliseconds · release→hit on the mock's single monotonic clock.</p>
+      </div>
+    </section>
+
+    <!-- METHODS -->
+    <section class="rsrch-section">
+      <h2>How the numbers are made</h2>
+      <ul class="rsrch-notes">
+        <li><strong>Percentiles</strong> by linear interpolation (type-7), so p50/p90/p95/p99 are comparable to numpy's defaults.</li>
+        <li><strong>Median 95% CI</strong> by seeded nonparametric bootstrap (2,000 resamples) — no normality assumed, and reproducible from the commit.</li>
+        <li><strong>Between-arm test</strong>: Mann–Whitney U (two-sided, tie- and continuity-corrected). It asks "are these two distributions different?" without assuming a bell curve.</li>
+        <li><strong>Effect size</strong>: Cliff's δ — how <em>big</em> the difference is, independent of n, with negligible/small/medium/large bands.</li>
+        <li><strong>Honest caveats</strong>: runs are on loopback (network RTT would dominate a real target but the ranking holds), n varies per arm (browser arms are slower to sample, so their CIs are wider), and nothing here touches a real store.</li>
+      </ul>
+      <p class="fineprint" id="method-note"></p>
+    </section>
+  </article>
+</main>
+
+<footer class="foot">
+  <span>Built as a systems/latency study. No real product, no real payment — the target is a local mock.</span>
+  <a href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">Source on GitHub ↗</a>
+</footer>
+
+<script src="/research.js"></script>
+</body>
+</html>
