@@ -64,21 +64,25 @@ a strategy must genuinely *react*, not predict the clock.
 
 ---
 
-## Measured results (this machine, loopback, 30 trials)
+## Measured results (this machine, loopback)
 
-Server-measured **release → hit**, milliseconds:
+Server-measured **release → hit**, milliseconds, fastest first:
 
-| approach [lang] | n | min | median | p95 | mean |
-|---|---|---|---|---|---|
-| http-direct **[node]** | 30 | **0.429** | 0.880 | 1.492 | 0.913 |
-| http-direct **[python]** | 30 | 0.501 | 1.066 | 1.417 | 1.045 |
-| hybrid (browser, Approach C) | 1* | — | 3.085 | — | — |
+| approach [lang] | n | min | median | p95 | max | mean |
+|---|---|---|---|---|---|---|
+| **B** http-direct **[rust]** | 30 | **0.308** | **0.735** | 1.914 | 2.080 | 0.839 |
+| **B** http-direct **[python]** | 30 | 0.436 | 0.941 | 1.619 | 2.416 | 1.009 |
+| **B** http-direct **[node]** | 30 | 0.640 | 1.428 | 2.805 | 3.510 | 1.565 |
+| **C** browser-hybrid **[python]** | 12 | 2.898 | 3.122 | 5.519 | 5.519 | 3.495 |
+| **A** browser-observer **[python]** | 12 | 2.665 | 3.512 | 8.604 | 8.604 | 4.315 |
 
-<sub>*Approach C shown from a single manual browser sample (Playwright not yet installed for a full run). Approaches A & C run automatically once you `pip install playwright`.</sub>
+**Takeaways:**
+- **Rust (raw `TcpStream`, no async runtime) is the floor** — ~0.3 ms min / 0.74 ms median.
+- The three HTTP-direct languages cluster within ~1 ms of each other. **The *approach* matters far more than the *language*** — Python and Node even swap places run-to-run (both are GC'd and within noise at n=30).
+- **Browser approaches are 3–4× slower with much fatter tails** (Approach A's p95 hits 8.6 ms) because the action travels through the browser event loop + page fetch stack. **Hybrid (C) beats observer (A)** by skipping the render→observe→click chain — as predicted.
+- This is all **loopback (zero network)**. On a deployed target add tens of ms of RTT on top of *every* row — which dwarfs all these differences and is exactly why **"warm, authenticated, and near the origin" beats "faster language."**
 
-**Takeaways:** even with *zero network*, the code floor is ~0.4–0.5 ms; Node edges Python; a real
-browser's fetch stack (~3 ms) costs a few ms over raw sockets. On a real deployed target, add tens
-of ms of RTT on top of all of these — which is exactly why "warm and ready" beats "fast language."
+*Reproduce:* `./run-all.sh` (add Go via [go.dev/dl](https://go.dev/dl/) for the other compiled tier).
 
 ---
 
@@ -112,15 +116,20 @@ python3 bots/python/approach_c_hybrid.py  --trials 10     # injected fetch
 python3 bots/python/approach_a_browser.py --trials 10 --headed   # watch it live
 ```
 
-### Compiled tier (Go — fastest runnable)
+### Compiled tier
 
 ```bash
+# Rust — absolute floor, std-only (no crates), measured fastest here
+# install: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+rustc -O bots/rust/approach_b_http.rs -o /tmp/rustbot && /tmp/rustbot --trials 30
+
+# Go — the other compiled option
 # install Go: https://go.dev/dl/
 go run bots/go/approach_b_http.go --trials 30 --lang go
 ```
 
-Rust (`tokio` + `hyper`) is the natural next step below Go for the absolute floor — the HTTP-direct
-strategy is ~80 lines and slots in the same way; add it under `bots/rust/` when you want it.
+The Rust bot is deliberately **std-only** — raw `TcpStream` + a hand-rolled minimal HTTP/1.1 client
+with Nagle off. No async runtime, no framework: that's why it posts the lowest floor in the table.
 
 ---
 
@@ -135,7 +144,8 @@ bots/
   python/approach_a_browser.py  Approach A — Playwright + MutationObserver
   python/approach_c_hybrid.py   Approach C — Playwright + injected fetch
   node/approach_b_http.mjs      Approach B in Node (faster tier)
-  go/approach_b_http.go         Approach B in Go  (compiled tier)
+  go/approach_b_http.go         Approach B in Go   (compiled tier)
+  rust/approach_b_http.rs       Approach B in Rust (std-only, absolute floor)
 benchmark/
   aggregate.py         merges results/*.csv into one sorted table
   results/             per-run CSVs (gitignored)

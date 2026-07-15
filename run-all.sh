@@ -39,6 +39,16 @@ else
   echo "==> (skip) Go not installed — https://go.dev/dl/ to enable the compiled tier"
 fi
 
+RUSTC="$(command -v rustc || echo "$HOME/.cargo/bin/rustc")"
+if [ -x "$RUSTC" ]; then
+  echo "==> Approach B: Rust HTTP-direct (std-only, absolute floor)"
+  "$RUSTC" -O bots/rust/approach_b_http.rs -o /tmp/rustbot_$$ 2>/dev/null \
+    && /tmp/rustbot_$$ --trials "$TRIALS" --lang rust || true
+  rm -f /tmp/rustbot_$$ 2>/dev/null || true
+else
+  echo "==> (skip) Rust not installed — https://rustup.rs to enable the absolute-floor tier"
+fi
+
 if python3 -c 'import playwright' 2>/dev/null; then
   echo "==> Approach A: Python browser + MutationObserver"
   python3 bots/python/approach_a_browser.py --trials "$BROWSER_TRIALS" || true

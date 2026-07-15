@@ -55,11 +55,16 @@ function doRelease() {
   releaseTimer = null;
   tRelease = nowNs();               // <-- authoritative release timestamp
   state = STATE.RELEASED;
-  const payload = JSON.stringify({ released: true, t_release_ns: tRelease.toString() });
+  const payload = Buffer.from(JSON.stringify({ released: true, t_release_ns: tRelease.toString() }));
 
-  // Wake every waiting HTTP long-poll at once.
+  // Wake every waiting HTTP long-poll at once (Content-Length, not chunked).
   for (const res of pendingLongpolls) {
-    try { res.writeHead(200, jsonHeaders()); res.end(payload); } catch (_) {}
+    try {
+      const h = jsonHeaders();
+      h['Content-Length'] = payload.length;
+      res.writeHead(200, h);
+      res.end(payload);
+    } catch (_) {}
   }
   pendingLongpolls.clear();
 
@@ -80,8 +85,10 @@ function jsonHeaders() {
 }
 
 function sendJson(res, code, obj) {
-  const body = JSON.stringify(obj);
-  res.writeHead(code, jsonHeaders());
+  const body = Buffer.from(JSON.stringify(obj));
+  const headers = jsonHeaders();
+  headers['Content-Length'] = body.length;   // force Content-Length (no chunked framing)
+  res.writeHead(code, headers);
   res.end(body);
 }
 
@@ -184,12 +191,15 @@ const server = http.createServer(async (req, res) => {
 
   // -------- static page -----------------------------------------------------
   if (p === '/' || p === '/index.html') {
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Content-Length': INDEX_HTML.length,
+    });
     return res.end(INDEX_HTML);
   }
 
-  res.writeHead(404, jsonHeaders());
-  res.end(JSON.stringify({ error: 'not-found' }));
+  return sendJson(res, 404, { error: 'not-found' });
 });
 
 // Long-polls hold the response open; disable Node's request timeout so they don't get cut.
