@@ -28,24 +28,52 @@
 <main id="top">
   <!-- HERO ------------------------------------------------------------------>
   <section class="hero">
-    <span class="badge">Latency benchmark · nanosecond-scored</span>
-    <h1>How fast can you click <span class="accent">“BUY”</span>?</h1>
-    <p class="lead">
-      Limited drops sell out in the milliseconds after they go live. <strong>PastaPass</strong> pits
-      three automation strategies against a mock drop site and measures — on a single monotonic
-      clock — exactly how long each takes to react and fire the purchase.
-    </p>
+    <svg class="hero-noodles" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g fill="none" stroke-linecap="round">
+        <path d="M-40 96 C 200 24, 340 176, 560 96 S 940 20, 1240 128" stroke="#f4c95d" stroke-width="7" opacity=".10" />
+        <path d="M-40 210 C 240 150, 400 300, 660 214 S 1000 140, 1260 236" stroke="#e0483a" stroke-width="8" opacity=".09" />
+        <path d="M-40 330 C 210 276, 380 420, 620 336 S 1010 260, 1250 360" stroke="#8fb96a" stroke-width="7" opacity=".08" />
+        <path d="M-40 446 C 230 392, 420 520, 700 448 S 1040 380, 1260 470" stroke="#f4c95d" stroke-width="6" opacity=".07" />
+      </g>
+    </svg>
 
-    <div class="headline" id="headline" hidden>
-      <div class="headline-num"><span id="headline-value">—</span><span class="unit">ms</span></div>
-      <div class="headline-label">
-        fastest median (p50)<br /><span id="headline-approach" class="muted">—</span>
+    <div class="hero-inner">
+      <span class="badge">🍝 Limited drop · Thu Jul 16 · 2:00 PM ET</span>
+      <h1>Unlimited pasta.<br /><span class="accent">Gone in a blink.</span></h1>
+      <p class="lead">
+        When the pass drops, it's claimed in the milliseconds after the button lights up.
+        <strong>PastaPass</strong> is a sniper-bot benchmark — three strategies race to hit
+        <em>Buy&nbsp;Now</em> the instant it goes live, scored to the nanosecond.
+      </p>
+
+      <div class="countdown" id="countdown" role="timer" aria-label="Time until the drop">
+        <div class="cd-seg"><span class="cd-num" id="cd-days">--</span><span class="cd-lab">days</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-seg"><span class="cd-num" id="cd-hours">--</span><span class="cd-lab">hrs</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-seg"><span class="cd-num" id="cd-mins">--</span><span class="cd-lab">min</span></div>
+        <span class="cd-sep">:</span>
+        <div class="cd-seg"><span class="cd-num" id="cd-secs">--</span><span class="cd-lab">sec</span></div>
       </div>
-    </div>
+      <p class="cd-caption" id="cd-caption">counting down to the drop</p>
 
-    <div class="cta">
-      <a class="btn btn-primary" href="#results">See the numbers ↓</a>
-      <a class="btn btn-ghost" href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">Read the code ↗</a>
+      <div class="drop-cta">
+        <button class="drop-buy is-locked" id="drop-buy" type="button">Buy Now</button>
+        <a class="drop-preview" id="drop-preview" href="#">▸ preview the moment it lights up</a>
+      </div>
+      <p class="drop-note muted" id="drop-note"></p>
+
+      <div class="headline" id="headline" hidden>
+        <div class="headline-num"><span id="headline-value">—</span><span class="unit">ms</span></div>
+        <div class="headline-label">
+          fastest bot median (p50)<br /><span id="headline-approach" class="muted">—</span>
+        </div>
+      </div>
+
+      <div class="cta">
+        <a class="btn btn-primary" href="#results">See the numbers ↓</a>
+        <a class="btn btn-ghost" href="#experiments">Experiments →</a>
+      </div>
     </div>
   </section>
 
