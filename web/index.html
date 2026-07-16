@@ -156,6 +156,20 @@
         measured outcome. Click any card for the full write-up.
       </p>
     </div>
+
+    <!-- design-space explainer: tap any factor/level to learn what it means -->
+    <div class="design-space" id="design-space">
+      <div class="ds-intro">
+        <h3>The design space — what's being varied</h3>
+        <p class="sub">Every experiment isolates exactly one of these four factors. Tap any factor or level to learn — in plain English — what it means and why it moves the needle.</p>
+      </div>
+      <table class="ds-table">
+        <thead><tr><th>Factor</th><th>Levels</th></tr></thead>
+        <tbody id="ds-tbody"><!-- filled by app.js --></tbody>
+      </table>
+      <div class="ds-detail" id="ds-detail"><!-- filled on click --></div>
+    </div>
+
     <div id="experiments-list" class="exp-grid"><!-- filled by app.js --></div>
   </section>
 

@@ -206,7 +206,86 @@ function renderExperiments(payload) {
   }).join("");
 }
 
+// --- design-space explainer: plain-English "what each factor/level means" ---
+const FACTORS = [
+  {
+    key: "language", name: "Language", exp: "001",
+    what: "Which programming language the sniper bot is written in — the raw execution speed underneath the strategy.",
+    levels: [
+      { name: "Rust", desc: "Compiled straight to native code with no garbage collector, so it posts the lowest, steadiest floor." },
+      { name: "Python", desc: "Interpreted and quick to iterate on — a hair slower with a slightly fatter tail, but far easier to write." },
+      { name: "Node", desc: "JavaScript on a fast JIT engine: lands between the two, close to Python." },
+    ],
+    implication: "Rust wins the floor (~0.59 vs ~1.18 ms median), but all three cluster within ~1 ms — the strategy matters far more than the language.",
+  },
+  {
+    key: "transport", name: "Transport", exp: "002",
+    what: "How the bot actually delivers the purchase — through a full real browser, or straight over the wire.",
+    levels: [
+      { name: "Browser + observer", desc: "A real Chromium loads the page like a human and a MutationObserver clicks BUY the instant it appears. Most realistic, but a whole browser sits in the path — slowest." },
+      { name: "HTTP-direct", desc: "No browser at all — just a raw HTTP request (HyperText Transfer Protocol, the plain web request under every click) fired at the buy endpoint. Fastest, but brittle to build." },
+      { name: "Hybrid", desc: "Keeps a real, logged-in browser for anti-bot cover, but fires the underlying request from in-page JavaScript. Near-raw speed with a browser's legitimacy." },
+    ],
+    implication: "Skipping the browser is ~4–5× faster than a rendered click; the hybrid is the pragmatic middle — browser cover at nearly raw speed.",
+  },
+  {
+    key: "connection", name: "Connection state", exp: "003",
+    what: "Whether the network connection is opened ahead of time, or at the last second when the drop fires.",
+    levels: [
+      { name: "Cold connect", desc: "Opens the socket only after it detects the drop, so you pay the TCP/TLS handshake inside the fire window." },
+      { name: "Warm socket", desc: "Pre-opens and holds the connection before the drop, so the handshake is already paid when it's time to fire." },
+    ],
+    implication: "Pre-warming shaves ~26% off the median. On a real TLS endpoint the cold penalty is a full handshake (tens of ms) — so warming is decisive.",
+  },
+  {
+    key: "mode", name: "Mode", exp: "004",
+    what: "How the bot decides WHEN to fire — wait and react to the signal, or fire on a pre-synced clock.",
+    levels: [
+      { name: "Reactive", desc: "Long-polls the \"is it live?\" endpoint and fires the moment it sees the release — but first pays a detect round-trip." },
+      { name: "Proactive", desc: "Syncs to the server's clock and fires exactly at the launch instant, skipping the detect round-trip (keeping a reactive fallback)." },
+    ],
+    implication: "Proactive beats reactive by ~20%, and the edge grows with network latency — it can save nearly a whole round-trip.",
+  },
+];
+
+function showFactor(key, levelIdx) {
+  const f = FACTORS.find((x) => x.key === key);
+  const detail = document.getElementById("ds-detail");
+  if (!f || !detail) return;
+  detail.innerHTML = `
+    <div class="ds-detail-card">
+      <div class="ds-detail-head"><h4>${f.name}</h4><a class="ds-exp-link" href="/experiment.html?id=${f.exp}">experiment #${f.exp} →</a></div>
+      <p class="ds-what">${f.what}</p>
+      <div class="ds-levels">
+        ${f.levels.map((lv, i) => `<div class="ds-level ${i === levelIdx ? "is-active" : ""}"><span class="ds-level-name">${lv.name}</span> <span class="ds-level-desc">${lv.desc}</span></div>`).join("")}
+      </div>
+      <div class="ds-implication"><span class="k">Why it matters</span>${f.implication}</div>
+    </div>`;
+}
+
+function renderDesignSpace() {
+  const tb = document.getElementById("ds-tbody");
+  if (!tb) return;
+  tb.innerHTML = FACTORS.map((f) => `
+    <tr>
+      <td><button class="ds-factor-btn" data-factor="${f.key}">${f.name}</button></td>
+      <td><div class="ds-levels-cell">${f.levels
+        .map((lv, i) => `<button class="ds-chip" data-factor="${f.key}" data-level="${i}">${lv.name}</button>`)
+        .join("")}</div></td>
+    </tr>`).join("");
+  document.getElementById("ds-detail").innerHTML =
+    '<p class="ds-detail-prompt">👆 Tap any factor or level above to see what it means — and why it matters.</p>';
+  document.getElementById("design-space").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-factor]");
+    if (!b) return;
+    showFactor(b.dataset.factor, b.dataset.level != null ? +b.dataset.level : -1);
+    document.querySelectorAll("#design-space .ds-chip, #design-space .ds-factor-btn")
+      .forEach((x) => x.classList.toggle("is-active", x === b));
+  });
+}
+
 (async function main() {
+  renderDesignSpace();
   const { data, sample } = await load();
   const groups = data.groups || [];
   if (sample) document.getElementById("sample-ribbon").hidden = false;

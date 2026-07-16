@@ -25,6 +25,8 @@ const pfmt = (p) => (p < 1e-4 ? p.toExponential(1) : p < 0.001 ? p.toFixed(5) : 
 
 let ARM_COLOR = {}; // key -> color, assigned in p50 order
 
+// GLOSS, gl() and wireGloss() live in the shared /gloss.js (loaded before this file).
+
 // --- log-scale helpers (shared idiom with app.js) --------------------------
 function logTicks(lo, hi) {
   const ticks = [];
@@ -51,24 +53,24 @@ function renderHypotheses(exps) {
     let stat = "";
     if (t && c && w) {
       const sig = t.significant;
-      verdict = `<span class="hyp-flag ${sig ? "hyp-flag--yes" : "hyp-flag--no"}">${sig ? "✓ supported" : "✕ not significant"}</span>`;
+      verdict = `<span class="hyp-flag gloss--plain ${sig ? "hyp-flag--yes" : "hyp-flag--no"}" data-gloss="verdict" tabindex="0">${sig ? "✓ supported" : "✕ not significant"}</span>`;
       const cc = ARM_COLOR[armKey(c)], wc = ARM_COLOR[armKey(w)];
       stat = `
         <div class="hyp-face">
           <div class="hyp-arm">
             <span class="dot" style="background:${cc}"></span>${esc(c.name)}
-            <span class="hyp-med">${fmt(c.stats.p50)}<span class="hyp-ci">CI ${fmt(c.ci_median[0])}–${fmt(c.ci_median[1])}</span></span>
+            <span class="hyp-med">${gl("median", fmt(c.stats.p50))}<span class="hyp-ci">${gl("ci", "CI")} ${fmt(c.ci_median[0])}–${fmt(c.ci_median[1])}</span></span>
           </div>
           <div class="hyp-vs">vs</div>
           <div class="hyp-arm hyp-arm--win">
             <span class="dot" style="background:${wc}"></span>${esc(w.name)} <span class="win-badge">🏆</span>
-            <span class="hyp-med">${fmt(w.stats.p50)}<span class="hyp-ci">CI ${fmt(w.ci_median[0])}–${fmt(w.ci_median[1])}</span></span>
+            <span class="hyp-med">${gl("median", fmt(w.stats.p50))}<span class="hyp-ci">${gl("ci", "CI")} ${fmt(w.ci_median[0])}–${fmt(w.ci_median[1])}</span></span>
           </div>
         </div>
         <div class="hyp-stats">
-          <span><b>Δ median</b> ${t.delta_pct > 0 ? "+" : ""}${t.delta_pct}%</span>
-          <span><b>Mann–Whitney</b> U=${t.u}, p=${pfmt(t.p)}</span>
-          <span><b>Cliff's δ</b> ${t.cliffs_delta} (${t.cliffs_label})</span>
+          <span><b>${gl("delta", "Δ median")}</b> ${t.delta_pct > 0 ? "+" : ""}${t.delta_pct}%</span>
+          <span><b>${gl("mwu", "Mann–Whitney")}</b> U=${t.u}, ${gl("p", "p")}=${pfmt(t.p)}</span>
+          <span><b>${gl("cliffs", "Cliff's δ")}</b> ${t.cliffs_delta} (${t.cliffs_label})</span>
         </div>`;
     }
     return `<a class="hyp-card" href="/experiment.html?id=${encodeURIComponent(e.id)}">
@@ -314,4 +316,5 @@ function renderStatsTable(arms) {
   renderStatsTable(ARMS);
   wireToolbar();
   drawDist();
+  wireGloss();
 })();
