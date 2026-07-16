@@ -27,11 +27,11 @@
       <span class="rsrch-kicker">Research write-up</span>
       <h1>Is a bot faster than a finger — and by how much, really?</h1>
       <p class="rsrch-lead">
-        Four hypotheses, one mock drop, one monotonic clock. Every arm is run repeatedly and
-        its <em>distribution</em> — not a single number — is what gets judged. Latencies are
-        right-skewed, so the summary below leans on the honest tools: percentiles, a
-        <strong>bootstrap 95% CI on the median</strong>, and nonparametric
-        <strong>Mann–Whitney U</strong> + <strong>Cliff's δ</strong> to decide whether an arm is
+        Four hypotheses, one mock drop, one <span class="gloss" data-gloss="monoclock" tabindex="0">monotonic clock</span>. Every arm is run repeatedly and
+        its <em><span class="gloss" data-gloss="dist" tabindex="0">distribution</span></em> — not a single number — is what gets judged. Latencies are
+        <span class="gloss" data-gloss="skew" tabindex="0">right-skewed</span>, so the summary below leans on the honest tools: percentiles, a
+        <strong><span class="gloss" data-gloss="bootstrap" tabindex="0">bootstrap</span> <span class="gloss" data-gloss="ci" tabindex="0">95% CI</span> on the median</strong>, and <span class="gloss" data-gloss="nonparam" tabindex="0">nonparametric</span>
+        <strong><span class="gloss" data-gloss="mwu" tabindex="0">Mann–Whitney U</span></strong> + <strong><span class="gloss" data-gloss="cliffs" tabindex="0">Cliff's δ</span></strong> to decide whether an arm is
         really faster or just lucky.
       </p>
       <p class="rsrch-meta muted" id="rsrch-meta">Loading…</p>
@@ -83,14 +83,21 @@
         <table id="stats-table">
           <thead>
             <tr>
-              <th>Arm</th><th class="num">n</th><th class="num">mean</th><th class="num">std</th>
-              <th class="num">p50 (95% CI)</th><th class="num">p90</th><th class="num">p95</th>
-              <th class="num">p99</th><th class="num">IQR</th><th class="num">CV</th>
+              <th>Arm</th>
+              <th class="num"><span class="gloss" data-gloss="n" tabindex="0">n</span></th>
+              <th class="num"><span class="gloss" data-gloss="mean" tabindex="0">mean</span></th>
+              <th class="num"><span class="gloss" data-gloss="std" tabindex="0">std</span></th>
+              <th class="num"><span class="gloss" data-gloss="median" tabindex="0">p50</span> (<span class="gloss" data-gloss="ci" tabindex="0">95% CI</span>)</th>
+              <th class="num"><span class="gloss" data-gloss="pctile" tabindex="0">p90</span></th>
+              <th class="num"><span class="gloss" data-gloss="pctile" tabindex="0">p95</span></th>
+              <th class="num"><span class="gloss" data-gloss="pctile" tabindex="0">p99</span></th>
+              <th class="num"><span class="gloss" data-gloss="iqr" tabindex="0">IQR</span></th>
+              <th class="num"><span class="gloss" data-gloss="cv" tabindex="0">CV</span></th>
             </tr>
           </thead>
           <tbody><!-- filled by research.js --></tbody>
         </table>
-        <p class="axis-note muted">All figures in milliseconds · release→hit on the mock's single monotonic clock.</p>
+        <p class="axis-note muted">All figures in milliseconds · <span class="gloss" data-gloss="releasehit" tabindex="0">release→hit</span> on the mock's single <span class="gloss" data-gloss="monoclock" tabindex="0">monotonic clock</span>.</p>
       </div>
     </section>
 
