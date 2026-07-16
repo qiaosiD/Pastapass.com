@@ -22,6 +22,7 @@
     <a href="#log">Log</a>
     <a href="#approaches">Approaches</a>
     <a href="#method">Method</a>
+    <a href="#clock">Clock sync</a>
     <a href="#stack">Stack</a>
     <a class="ext" href="https://github.com/qiaosiD/Pastapass.com" target="_blank" rel="noopener">GitHub ↗</a>
   </nav>
@@ -316,6 +317,46 @@
 <span class="k">const</span> latency = tHit - tRelease;    <span class="c">// nanoseconds</span>
 <span class="c">// every approach races the same endpoint,</span>
 <span class="c">// so this number is directly comparable.</span></code></pre>
+    </div>
+  </section>
+
+  <!-- CLOCK SYNC ------------------------------------------------------------->
+  <section id="clock" class="panel">
+    <div class="panel-head">
+      <h2>Syncing to the drop's clock</h2>
+      <p class="sub">The single highest-leverage lever — fire at the wrong instant and nothing else matters.</p>
+    </div>
+
+    <div class="method-grid">
+      <div class="method-copy">
+        <p>
+          Your computer's clock and the store's server clock don't agree — and they can disagree by
+          exactly the few milliseconds you're trying to win. Fire on <em>your</em> wall clock and you're
+          either early (rejected) or late (missed).
+        </p>
+        <p>So a proactive bot fires on <strong>their</strong> clock instead:</p>
+        <ul>
+          <li>Sample a live time endpoint (<code>/api/server-time</code>) a few times.</li>
+          <li>Compute the offset the way NTP does — correct for the round-trip by taking its midpoint.</li>
+          <li>Schedule the fire against the server's launch instant, offset-corrected — keeping a reactive long-poll as a backstop.</li>
+        </ul>
+        <p class="fineprint">
+          The gotcha: you can't read the time off a page's cached <code>Date</code> header — a CDN
+          freezes it (in testing we caught one reading <strong>15+ hours stale</strong>). Sync off a
+          <em>live</em> endpoint, never a cached response. This is what lets
+          <a href="/experiment.html?id=004">proactive beat reactive (#004)</a>, and why clock accuracy
+          tops <a href="/research.html">the levers</a>.
+        </p>
+      </div>
+      <pre class="code"><code><span class="c">// offset = your clock − the server's, midpoint-corrected</span>
+<span class="k">const</span> t0 = now();
+<span class="k">const</span> { now: server } = <span class="k">await</span> get("/api/server-time");
+<span class="k">const</span> t1 = now();
+<span class="k">const</span> offset = server - (t0 + t1) / 2;
+
+<span class="c">// fire AT the launch instant, on the server's clock</span>
+<span class="fn">fireAt</span>(launch - offset);
+<span class="c">// bots/python/clock_sync.py does this, plus a live countdown</span></code></pre>
     </div>
   </section>
 
