@@ -178,7 +178,7 @@ function renderDetail(e) {
     ? `<div class="exp-result-banner">
          <span class="win-badge">🏆 Winner</span>
          <span class="big">${esc(o.winner_name)}</span>
-         <span class="muted">${fmt(o.winner_value)} ms ${esc(pm.replace("_ms", ""))}${o.delta_pct != null ? ` · ${o.delta_pct > 0 ? "+" : ""}${o.delta_pct}% vs ${esc(o.control_key || "control")}` : ""}</span>
+         <span class="muted">${fmt(o.winner_value)} ms ${gl("median", esc(pm.replace("_ms", "")))}${o.delta_pct != null ? ` · ${o.delta_pct > 0 ? "+" : ""}${o.delta_pct}% vs ${esc(o.control_key || "control")}` : ""}</span>
        </div>`
     : `<p class="muted">Not run yet — <code>experiment.py run --id ${esc(e.id)}</code>.</p>`;
 
@@ -189,10 +189,10 @@ function renderDetail(e) {
       <span class="exp-id">#${esc(e.id)}</span>
     </div>
     <h1>${esc(e.title)}</h1>
-    <p class="exp-dates">created ${created}${updated ? ` · updated ${updated}` : ""} · primary metric: ${esc(pm)}</p>
+    <p class="exp-dates">created ${created}${updated ? ` · updated ${updated}` : ""} · primary metric: ${gl("median", esc(pm))}</p>
 
     <div class="exp-callout"><span class="k">Hypothesis</span>${esc(e.hypothesis) || "—"}</div>
-    ${e.method ? `<section class="exp-section"><h2>What I did</h2><p>${esc(e.method)}</p></section>` : ""}
+    ${e.method ? `<section class="exp-section"><h2>What I did</h2><p>${glossify(esc(e.method))}</p></section>` : ""}
 
     <section class="exp-section">
       <h2>Every run — ${(e.variants || []).length} variants</h2>
@@ -208,11 +208,13 @@ function renderDetail(e) {
       <p class="axis-note muted" id="exp-dist-cap"></p>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Variant</th><th>Setup</th><th class="num">n</th><th class="num">min</th>
-            <th class="num">p50</th><th class="num">p95</th><th class="num">max</th><th class="num">mean</th></tr></thead>
+          <thead><tr><th>Variant</th><th>Setup</th>
+            <th class="num">${gl("n", "n")}</th><th class="num">${gl("min", "min")}</th>
+            <th class="num">${gl("median", "p50")}</th><th class="num">${gl("pctile", "p95")}</th>
+            <th class="num">${gl("max", "max")}</th><th class="num">${gl("mean", "mean")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <p class="axis-note muted">All figures in milliseconds · release→hit on the mock's single monotonic clock.</p>
+        <p class="axis-note muted">All figures in milliseconds · ${gl("releasehit", "release→hit")} on the mock's single ${gl("monoclock", "monotonic clock")}.</p>
       </div>
     </section>
 
@@ -242,6 +244,7 @@ function renderDetail(e) {
 
   document.title = `${e.title} — PastaPass experiment`;
   el.innerHTML = renderDetail(e);
+  wireGloss();
   SERIES = buildSeries(e.variants || []);
   drawExpDist();
   wireExpDist();
