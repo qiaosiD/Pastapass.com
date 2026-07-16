@@ -311,9 +311,21 @@ function factorialCells() {
 
 function factorialReason(c) {
   const browser = c.tc === "BO" || c.tc === "HY";
-  if (c.lc === "RS" && browser) return "No Rust browser-automation bot exists — not implemented.";
-  if (browser && (c.cc !== "WA" || c.mc !== "RX")) return "A rendered click is warm + reactive by nature — cold-socket and proactive-fire aren't real strategies for a browser.";
-  if (c.lc === "RS" && c.tc === "HD") return "Rust HTTP-direct: only the warm + reactive floor is measured so far.";
+  const arm = c.tc === "BO" ? "browser-observer" : "hybrid";
+  // No Rust browser automation exists — the browser/hybrid arms are Playwright (Python).
+  if (c.lc === "RS" && browser) {
+    return `No Rust ${arm} bot — the browser arms run on Playwright (Python), and there's no std-only Rust twin, so this one can't be clocked.`;
+  }
+  // Browser transports have exactly one honest config (warm + reactive); name the invalid knob(s).
+  if (browser) {
+    const bad = [];
+    if (c.cc === "CO") bad.push("it owns its connection pool, so there's no socket to cold-start");
+    if (c.mc === "PX") bad.push("it must watch the DOM and react, so it can't fire proactively before the button renders");
+    if (bad.length) {
+      const lead = bad.length > 1 ? "Neither knob applies to a browser" : "Not a real knob for a browser";
+      return `${lead}: ${bad.join("; and ")}. A browser's only honest config is warm + reactive — that's the cell we measured.`;
+    }
+  }
   return "Not run yet.";
 }
 
