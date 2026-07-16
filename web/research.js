@@ -291,6 +291,93 @@ function renderStatsTable(arms) {
 }
 
 // ===========================================================================
+//  Full factorial matrix — 24 cells, expandable to every run
+// ===========================================================================
+const F_LANGS = [["RS", "Rust"], ["PY", "Python"]];
+const F_MODES = [["RX", "Reactive"], ["PX", "Proactive"]];
+const F_CONNS = [["CO", "Cold connect"], ["WA", "Warm socket"]];
+const F_TRANS = [["BO", "Browser + observer"], ["HD", "HTTP-direct"], ["HY", "Hybrid"]];
+
+function factorialCells() {
+  const cells = [];
+  let n = 0;
+  for (const [lc, lang] of F_LANGS)
+    for (const [mc, mode] of F_MODES)
+      for (const [cc, conn] of F_CONNS)
+        for (const [tc, transport] of F_TRANS)
+          cells.push({ n: ++n, id: `${lc}-${tc}-${cc}-${mc}`, lang, transport, conn, mode, lc, tc, cc, mc });
+  return cells;
+}
+
+function factorialReason(c) {
+  const browser = c.tc === "BO" || c.tc === "HY";
+  if (c.lc === "RS" && browser) return "No Rust browser-automation bot exists — not implemented.";
+  if (browser && (c.cc !== "WA" || c.mc !== "RX")) return "A rendered click is warm + reactive by nature — cold-socket and proactive-fire aren't real strategies for a browser.";
+  if (c.lc === "RS" && c.tc === "HD") return "Rust HTTP-direct: only the warm + reactive floor is measured so far.";
+  return "Not run yet.";
+}
+
+function factorialDetail(c, m) {
+  if (!m) return `<div class="fact-empty">${esc(factorialReason(c))}</div>`;
+  const runs = m.samples.map((v, i) => `<span class="run" title="run #${i}">${fmt(v)}</span>`).join("");
+  return `<div class="fact-stats">
+      <span><b>n</b> ${m.n}</span><span><b>median</b> ${fmt(m.p50)} ms</span>
+      <span><b>p95</b> ${fmt(m.p95)} ms</span><span><b>min</b> ${fmt(m.min)}</span>
+      <span><b>max</b> ${fmt(m.max)}</span><span><b>mean</b> ${fmt(m.mean)} ms</span>
+    </div>
+    <div class="fact-runs" aria-label="all ${m.n} runs in milliseconds">${runs}</div>`;
+}
+
+function renderFactorial(data) {
+  const el = document.getElementById("factorial");
+  if (!el) return;
+  const cellsData = (data && data.cells) || {};
+  let html = "";
+  for (const [lc, lang] of F_LANGS) {
+    const group = factorialCells().filter((c) => c.lc === lc);
+    html += `<h3 class="fact-group">${lang} <span class="muted">(${group[0].n}–${group[group.length - 1].n})</span></h3>`;
+    html += `<div class="table-wrap"><table class="fact-table"><thead><tr>
+      <th class="num">#</th><th>ID</th><th>Transport</th><th>Connection</th><th>Mode</th><th class="num">median</th><th></th></tr></thead><tbody>`;
+    for (const c of group) {
+      const m = cellsData[c.id], measured = !!m;
+      html += `<tr class="fact-row ${measured ? "is-measured" : "is-empty"}" data-id="${c.id}" tabindex="0" role="button" aria-expanded="false">
+        <td class="num">${c.n}</td>
+        <td class="fact-id">${c.id}</td>
+        <td>${c.transport}</td><td>${c.conn}</td><td>${c.mode}</td>
+        <td class="num">${measured ? fmt(m.p50) + " ms" : '<span class="muted">—</span>'}</td>
+        <td class="fact-toggle">${measured ? "▸" : '<span class="muted">·</span>'}</td>
+      </tr>
+      <tr class="fact-detail" data-detail="${c.id}" hidden><td colspan="7">${factorialDetail(c, m)}</td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+  el.innerHTML = html;
+
+  const meta = document.getElementById("factorial-meta");
+  if (meta && data) meta.textContent = `${data.measured} of ${data.total_cells} cells measured at n=30 · the rest are the design roadmap.`;
+}
+
+function wireFactorial() {
+  const el = document.getElementById("factorial");
+  if (!el) return;
+  const toggle = (row) => {
+    const id = row.dataset.id;
+    const detail = el.querySelector(`.fact-detail[data-detail="${id}"]`);
+    if (!detail) return;
+    const open = detail.hidden;
+    detail.hidden = !open;
+    row.setAttribute("aria-expanded", open ? "true" : "false");
+    const t = row.querySelector(".fact-toggle");
+    if (row.classList.contains("is-measured")) t.textContent = open ? "▾" : "▸";
+  };
+  el.addEventListener("click", (ev) => { const r = ev.target.closest(".fact-row"); if (r) toggle(r); });
+  el.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    const r = ev.target.closest(".fact-row"); if (r) { ev.preventDefault(); toggle(r); }
+  });
+}
+
+// ===========================================================================
 (async function main() {
   let data;
   try {
@@ -316,5 +403,12 @@ function renderStatsTable(arms) {
   renderStatsTable(ARMS);
   wireToolbar();
   drawDist();
+
+  try {
+    const fr = await fetch("/factorial.json", { headers: { accept: "application/json" } });
+    renderFactorial(fr.ok ? await fr.json() : null);
+  } catch (_) { renderFactorial(null); }
+  wireFactorial();
+
   wireGloss();
 })();

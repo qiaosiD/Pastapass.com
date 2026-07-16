@@ -18,3 +18,4 @@ benchmark/results/*.csv
 
 # playwright browsers are installed globally, nothing to ignore here
 .DS_Store
+benchmark/results/factorial/*.csv
