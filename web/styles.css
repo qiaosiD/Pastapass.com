@@ -437,3 +437,17 @@ pre.code .fn { color: var(--gold); }
 .fact-runs { display: flex; flex-wrap: wrap; gap: 6px; padding: 13px 16px; }
 .fact-runs .run { font-family: var(--mono); font-size: 11.5px; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 5px; padding: 2px 7px; }
 .fact-empty { padding: 13px 16px; color: var(--muted-2); font-size: 13px; font-style: italic; max-width: 70ch; }
+
+/* ---- human baseline reaction test --------------------------------------- */
+.react { display: flex; gap: clamp(20px, 4vw, 40px); align-items: center; flex-wrap: wrap; }
+.react-btn { font: 800 20px var(--sans); padding: 22px 40px; border-radius: 16px; border: 1px solid var(--line); background: var(--card-2); color: var(--text); cursor: pointer; min-width: 280px; transition: background .1s, transform .08s, box-shadow .12s; }
+.react-btn:active { transform: translateY(1px); }
+.react-btn.is-waiting { background: #241f05; color: var(--gold); border-color: #3a3320; }
+.react-btn.is-live { background: linear-gradient(180deg, #34c977, #1e9c53); color: #04140b; border-color: #34c977; box-shadow: 0 14px 34px rgba(52,201,119,.36); }
+.react-btn.is-early { background: rgba(224,72,58,.14); color: var(--accent); border-color: rgba(224,72,58,.42); }
+.react-readout { min-width: 220px; }
+.react-result { font: 800 clamp(36px, 6vw, 46px) var(--mono); color: var(--gold); line-height: 1; }
+.react-result .unit { font-size: .4em; color: var(--muted); margin-left: 4px; }
+.react-note { color: var(--muted); font-size: 14px; margin: 10px 0 0; max-width: 54ch; }
+.react-note strong { color: var(--text); }
+.react-note em { color: #e6e9f0; font-style: italic; }

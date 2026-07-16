@@ -344,3 +344,54 @@ function renderDesignSpace() {
   tick();
   setInterval(tick, 1000);
 })();
+
+// --- human baseline: a reaction test, the thing every bot is measured against ---
+(function humanBaseline() {
+  const btn = document.getElementById("react-btn");
+  if (!btn) return;
+  const result = document.getElementById("react-result");
+  const note = document.getElementById("react-note");
+  const BOT_MS = 0.53; // fastest bot median on loopback (Rust HTTP-direct)
+  let state = "idle";  // idle | waiting | live
+  let tRelease = 0, timer = null;
+  const trials = [];
+  const median = (a) => {
+    const s = [...a].sort((x, y) => x - y), n = s.length;
+    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+  };
+
+  function arm() {
+    state = "waiting";
+    btn.textContent = "Wait for green…";
+    btn.className = "react-btn is-waiting";
+    result.textContent = "—";
+    note.textContent = "Steady… don't jump early.";
+    timer = setTimeout(() => {
+      state = "live";
+      tRelease = performance.now();
+      btn.textContent = "BUY NOW — click!";
+      btn.className = "react-btn is-live";
+    }, 900 + Math.random() * 2200);
+  }
+
+  btn.addEventListener("click", () => {
+    if (state === "idle") { arm(); return; }
+    if (state === "waiting") {
+      clearTimeout(timer);
+      state = "idle";
+      btn.textContent = "Too early — click to retry";
+      btn.className = "react-btn is-early";
+      note.textContent = "Jumped the gun — that's firing before the drop, which the server rejects (409). Wait for green.";
+      return;
+    }
+    // live: measure release→hit on the monotonic clock
+    const ms = performance.now() - tRelease;
+    trials.push(ms);
+    state = "idle";
+    btn.textContent = "Again";
+    btn.className = "react-btn";
+    const med = median(trials), factor = Math.round(med / BOT_MS);
+    result.innerHTML = `${ms.toFixed(0)}<span class="unit">ms</span>`;
+    note.innerHTML = `Median over ${trials.length}: <strong>${med.toFixed(0)} ms</strong>. The fastest bot's is <strong>${BOT_MS} ms</strong> — it reacts about <strong>${factor.toLocaleString()}×</strong> faster. You can't out-react it; the only way to compete is to be <em>ready</em>.`;
+  });
+})();
