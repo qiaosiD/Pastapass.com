@@ -25,6 +25,9 @@ const GLOSS = {
   releasehit: "Release→hit: the time from the server making the button live to the buy request landing — both stamped on that one clock.",
   dist: "Distribution: the full spread of every run, not just one summary number.",
   loopback: "Loopback: bot and mock server run on the same machine (127.0.0.1), so there's no real network — it isolates pure code/strategy overhead. On a live target the network round-trip would dominate.",
+  dom: "Document Object Model — the live tree of page elements a browser builds and renders. Finding a button in it and clicking it is what makes browser automation slow.",
+  rtt: "Round-trip time — how long a request takes to reach the server and the reply to return. Set by physical distance; no code beats the speed of light down the wire.",
+  tls: "TLS — the encryption handshake (the padlock). A fresh one costs a couple of network round-trips before any data flows; reusing a warm connection skips it.",
 };
 
 // wrap a term so it shows its glossary tooltip on hover/focus/tap
