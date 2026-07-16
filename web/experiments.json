@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-07-15T15:03:50",
+  "updated_at": "2026-07-15T20:13:50",
   "count": 4,
   "experiments": [
     {
@@ -191,7 +191,7 @@
       "updated": "2026-07-15T02:53:58",
       "hypothesis": "A compiled language (Rust) posts a lower firing floor than Python for the HTTP-direct approach.",
       "primary_metric": "p50_ms",
-      "method": "Ran approach_b_http in each language, 30 trials, against the local mock on loopback; scored release\u2192hit on the server's single monotonic clock.",
+      "method": "Ran approach_b_http in Python, Node, and Rust \u2014 30 trials each \u2014 against the local mock on loopback; scored release\u2192hit on the server's single monotonic clock.",
       "variants": [
         {
           "key": "control",
@@ -206,6 +206,21 @@
             "p95_ms": 1.2674,
             "max_ms": 1.4593,
             "mean_ms": 1.1003
+          }
+        },
+        {
+          "key": "node",
+          "name": "Node (std http)",
+          "approach": "http-direct",
+          "lang": "node",
+          "trials": 30,
+          "metrics": {
+            "n": 30,
+            "min_ms": 0.9376,
+            "p50_ms": 1.3567,
+            "p95_ms": 2.1935,
+            "max_ms": 2.3188,
+            "mean_ms": 1.4054
           }
         },
         {
@@ -234,7 +249,7 @@
         "delta_ms": -0.5923,
         "delta_pct": -50.2
       },
-      "conclusion": "Rust posts the lower floor (~0.7 vs ~1.0 ms median), but both HTTP-direct langs cluster within ~1 ms \u2014 the approach dominates the language.",
+      "conclusion": "Rust posts the lowest floor (~0.59 ms median); Python (~1.18) and Node (~1.36) land close behind. All three HTTP-direct languages cluster within ~1 ms of each other \u2014 the approach dominates the language.",
       "decision": "Publish Rust as the record floor; keep Python for day-to-day iteration."
     }
   ]
