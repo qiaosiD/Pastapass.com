@@ -55,6 +55,86 @@
       <div id="hypotheses" class="hyp-list"><p class="muted">Loading hypotheses…</p></div>
     </section>
 
+    <!-- THE LEVERS (real-world priorities, ranked) -->
+    <section class="rsrch-section">
+      <h2>The levers — ranked by what they cost you</h2>
+      <p class="sub">The loopback numbers isolate the sub-millisecond <em>floor</em>. On a real target these are the levers that actually decide it — biggest cost first. Nail the top ones; the language is genuinely last.</p>
+      <div class="table-wrap">
+        <table class="levers-table">
+          <thead><tr><th>Lever</th><th>Cost if you get it wrong</th><th>The fix — and how to push further</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">1</span>Clock accuracy</td>
+              <td><span class="cost cost--critical">Unbounded</span></td>
+              <td>
+                <p class="lever-fix">Fire at the wrong instant and nothing else matters.</p>
+                <ul class="lever-mits">
+                  <li>Sync to the <strong>server's</strong> clock — sample a time endpoint, compute the offset NTP-style (round-trip midpoint), and schedule the fire against its launch instant, not your wall clock.</li>
+                  <li>Discipline the local clock with chrony/PTP and fire a hair early, keeping a reactive long-poll as a backstop — first success wins.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">2</span>Browser overhead</td>
+              <td><span class="cost cost--high">Tens–hundreds of ms</span></td>
+              <td>
+                <p class="lever-fix">Skip the <span class="gloss" data-gloss="dom" tabindex="0">DOM</span> entirely on the firing path.</p>
+                <ul class="lever-mits">
+                  <li>Reverse-engineer the buy request and fire raw HTTP; keep a browser only to mint the session/cookies, never to click.</li>
+                  <li>If a browser is mandatory (anti-bot), inject <code>fetch()</code> from in-page JS and pre-capture the token so firing is one request, not render→observe→click.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">3</span>Cold connect</td>
+              <td><span class="cost cost--med">~95 ms</span></td>
+              <td>
+                <p class="lever-fix">Warm socket. Non-negotiable.</p>
+                <ul class="lever-mits">
+                  <li>Pre-open a keep-alive TCP+<span class="gloss" data-gloss="tls" tabindex="0">TLS</span> connection to the exact endpoint minutes ahead, with periodic keepalives so it isn't reaped.</li>
+                  <li>Use TLS 1.3 session resumption / 0-RTT early data and HTTP/2 reuse, and pre-serialize the request bytes so the fire is a single <code>write()</code>.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">4</span>Distance to their server</td>
+              <td><span class="cost cost--med">50–80 ms</span></td>
+              <td>
+                <p class="lever-fix">Run from a cloud region physically near their origin — same region drops the <span class="gloss" data-gloss="rtt" tabindex="0">round-trip</span> to 1–5 ms.</p>
+                <ul class="lever-mits">
+                  <li>Fingerprint the origin's provider/region (traceroute, TLS SNI, response headers) and deploy the bot in that exact region.</li>
+                  <li>Pre-resolve and pin the origin IP to skip DNS at fire time, and target the origin directly rather than a distant CDN edge for the write.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">5</span>Detection lag</td>
+              <td><span class="cost cost--low">5–50+ ms</span></td>
+              <td>
+                <p class="lever-fix">Proactive instead of polling.</p>
+                <ul class="lever-mits">
+                  <li>Fire proactively at the synced launch instant (retry if the server flips late), with a reactive long-poll fallback.</li>
+                  <li>Replace short-interval polling with a held-open channel (long-poll / SSE / WebSocket) so you learn of the release in one hop, not on the next tick.</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <td class="lever-name"><span class="lever-rank">6</span>Language</td>
+              <td><span class="cost cost--min">~2 ms</span></td>
+              <td>
+                <p class="lever-fix">Last. Genuinely last.</p>
+                <ul class="lever-mits">
+                  <li>Fix every lever above first; only then swap to a compiled runtime (Rust/Go) with an allocation-free, pre-warmed hot path.</li>
+                  <li>Pin the process to a core, raise scheduling priority, and warm the fire path once before the drop so the real fire pays no cold-start.</li>
+                </ul>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="axis-note muted">Costs are typical real-world magnitudes on a live target — orders of magnitude above the loopback floor measured below.</p>
+      </div>
+    </section>
+
     <!-- DISTRIBUTIONS EXPLORER (JS) -->
     <section class="rsrch-section">
       <h2>Distributions — every run, every arm</h2>
@@ -73,6 +153,14 @@
         <div id="dist-tip" class="dist-tip" hidden></div>
       </div>
       <p class="axis-note muted" id="dist-caption"></p>
+    </section>
+
+    <!-- FULL FACTORIAL MATRIX (JS) -->
+    <section class="rsrch-section">
+      <h2>The full factorial — 24 configurations</h2>
+      <p class="sub">Every combination of language × transport × connection × mode. Click any row to expand its 30 individual runs in milliseconds. Measured cells are highlighted; the rest are the design roadmap, each with a note on why it isn't run.</p>
+      <div id="factorial"><p class="muted">Loading the matrix…</p></div>
+      <p class="axis-note muted" id="factorial-meta"></p>
     </section>
 
     <!-- FULL STATS TABLE (JS) -->
